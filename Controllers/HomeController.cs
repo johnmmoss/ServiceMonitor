@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using ApiPinger.Models;
 using System.Net.Http;
 using System.Net;
+using static Microsoft.AspNetCore.Hosting.Internal.HostingApplication;
 
 namespace ApiPinger.Controllers
 {
@@ -22,6 +23,10 @@ namespace ApiPinger.Controllers
         public string Name { get; private set; }
         public string QA { get; private set; }
         public string Integration { get; private set; }
+    }
+    public class IndexModel
+    {
+        public string HostUrl { get; set; }
     }
     public class SourceModel
     {
@@ -49,11 +54,11 @@ namespace ApiPinger.Controllers
             };
         }
 
-
-
         public async Task<IActionResult> Index()
         {
-            return View();
+            var url = Request.Host.Value;
+            var t = $"{Request.Scheme}://{Request.Host.Value}";
+            return View(new IndexModel(){ HostUrl = t });
         }
 
         public async Task<IActionResult> Sources()

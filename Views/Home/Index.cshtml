@@ -1,4 +1,5 @@
-﻿@{
+﻿@model ApiPinger.Controllers.IndexModel
+@{
     ViewData["Title"] = "Home Page";
 }
 
@@ -8,7 +9,8 @@
   <script>
        function load() {
            $("#content").fadeOut();
-            $.get("http://localhost:5000/home/sources")
+           var url = "@(Model.HostUrl)/home/sources";
+            $.get(url)
                 .done(function(data) {
                     $("#content").empty();
                     console.log("Running monitor load...");
