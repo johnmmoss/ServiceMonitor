@@ -10,6 +10,7 @@ using static Microsoft.AspNetCore.Hosting.Internal.HostingApplication;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using TfsClient;
+using Microsoft.Extensions.Options;
 
 namespace ApiPinger.Controllers
 {
@@ -21,6 +22,13 @@ namespace ApiPinger.Controllers
         int VEHICLE_DEF_ID = 1;
         string buildUrls = "https://<accountname>.visualstudio.com/DefaultCollection/project-zen/_apis/build/builds?api-version=2.";
         string releaseUrls = "https://<accountname>.vsrm.visualstudio.com/DefaultCollection/project-zen/_apis/release/releases?api-version=4.0-preview.4";
+
+        private TfsClientOptions _options;
+
+        public HomeController(IOptions<TfsClientOptions> options)
+        {
+            _options = options.Value; 
+        }
 
         public IList<ApiSource> GetApiSources()
         {
@@ -59,7 +67,7 @@ namespace ApiPinger.Controllers
             }).OrderByDescending(x => x.Name).ToList();
         }
 
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             var showroomBuild = GetBuildModels(SHOWROOM_DEF_ID).First();
             var vehicleBuild = GetBuildModels(VEHICLE_DEF_ID).First();

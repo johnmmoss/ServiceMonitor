@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TfsClient;
 
 namespace ApiPinger
 {
@@ -21,6 +22,11 @@ namespace ApiPinger
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddOptions();
+            //services.Configure<TfsClientOptions>(Configuration);
+            //services.Configure<TfsClientOptions>(Configuration.GetSection("TfsClientOptions"));
+
+            var tfsClientOptionsConfig = Configuration.GetSection("TfsClientOptions");
             services.AddMvc();
         }
 

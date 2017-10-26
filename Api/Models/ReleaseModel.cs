@@ -9,4 +9,3 @@ namespace ApiPinger.Controllers
         public string Status { get; set; }
     }
 }
-}
