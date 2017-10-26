@@ -1,0 +1,122 @@
+﻿using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using ApiPinger.Models;
+using System.Net.Http;
+using System.Net;
+using static Microsoft.AspNetCore.Hosting.Internal.HostingApplication;
+using System.Net.Http.Headers;
+using Newtonsoft.Json;
+using TfsClient;
+
+namespace ApiPinger.Controllers
+{
+    public class HomeController : Controller
+    {
+        int SHOWROOM_REL_ID = 11;
+        int SHOWROOM_DEF_ID = 12;
+        int IDENTITY_DEF_ID = 11;
+        int VEHICLE_DEF_ID = 1;
+        string buildUrls = "https://<accountname>.visualstudio.com/DefaultCollection/project-zen/_apis/build/builds?api-version=2.";
+        string releaseUrls = "https://<accountname>.vsrm.visualstudio.com/DefaultCollection/project-zen/_apis/release/releases?api-version=4.0-preview.4";
+
+        public IList<ApiSource> GetApiSources()
+        {
+            return new List<ApiSource>()
+                {
+                    new ApiSource("Site 1", "http://www.google.co.uk", "http://www.google.co.uk"),
+                    new ApiSource("Site 2", "http://www.google.co.uk", "http://www.google.co.uk"),
+                    new ApiSource("Site 3", "http://www.google.co.uk", "http://www.google.co.uk"),
+                    new ApiSource("Site 4", "http://www.google.co.uk", "http://www.google.co.uk")
+                };
+        }
+       
+        public IList<BuildModel> GetBuildModels(int defintionId)
+        {
+            TfsRepository tfsRepository = new TfsRepository();
+            var buildObjects = tfsRepository.Get<Tfs.Build.RootObject>($"{buildUrls}&definitions={defintionId}").Result;
+
+            return buildObjects.value.Select(x => new BuildModel()
+            {
+                Status = x.status,
+                Result = x.result,
+                Finished = x.finishTime
+            }).OrderByDescending(x => x.Finished).ToList();
+        }
+
+        public IList<ReleaseModel> GetReleaseModel(int definitionId)
+        {
+            TfsRepository tfsRepository = new TfsRepository();
+
+            var buildObjects = tfsRepository.Get<Tfs.Release.RootObject>($"{releaseUrls}&defintionId={definitionId}").Result;
+            return buildObjects.value.Select(x => new ReleaseModel()
+            {
+                Status = x.status,
+                CreatedOn = x.createdOn,
+                Name = x.name
+            }).OrderByDescending(x => x.Name).ToList();
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var showroomBuild = GetBuildModels(SHOWROOM_DEF_ID).First();
+            var vehicleBuild = GetBuildModels(VEHICLE_DEF_ID).First();
+            var identityBuild = GetBuildModels(IDENTITY_DEF_ID).First();
+
+            var showroomRelease = GetReleaseModel(SHOWROOM_REL_ID);
+            var url = $"{Request.Scheme}://{Request.Host.Value}";
+
+            return View(new IndexModel() { HostUrl = url });
+        }
+
+        public async Task<IActionResult> Sources()
+        {
+            var model = new SourceModel();
+            model.Items = new List<SourceItemModel>();
+            using (var httpClient = new HttpClient())
+            {
+                foreach (var apiSource in GetApiSources())
+                {
+
+                    var modelItem = new SourceItemModel();
+                    modelItem.Name = apiSource.Name;
+                    modelItem.QArl = apiSource.Integration;
+                    modelItem.IntegrationUrl = apiSource.Integration;
+
+                    HttpResponseMessage integrationResponse, qaResponse;
+
+                    try
+                    {
+                        integrationResponse = await httpClient.GetAsync(apiSource.Integration);
+                        modelItem.IntegrationUp = integrationResponse.StatusCode == HttpStatusCode.OK;
+                    }
+                    catch
+                    {
+                        modelItem.IntegrationUp = false;
+                    }
+                    try
+                    {
+                        qaResponse = await httpClient.GetAsync(apiSource.QA);
+                        modelItem.QAUp = qaResponse.StatusCode == HttpStatusCode.OK;
+                    }
+                    catch
+                    {
+
+                        modelItem.QAUp = false;
+                    }
+
+                    model.Items.Add(modelItem);
+                }
+            }
+
+            return Json(model);
+        }
+
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+    }
+}
