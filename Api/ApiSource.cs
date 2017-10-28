@@ -1,15 +1,11 @@
-namespace ApiPinger.Controllers
+namespace ApiPinger
 {
     public class ApiSource
         {
-            public ApiSource(string name, string integration, string qa)
-            {
-                Name = name;
-                Integration = integration;
-                QA = qa;
-            }
-            public string Name { get; private set; }
-            public string QA { get; private set; }
-            public string Integration { get; private set; }
+            public string Name { get; set; }
+            public int BuildDefinitionId { get; set; }
+            public int ReleaseDefinitionId { get; set; }
+            public string QaUrl { get; set; }
+            public string IntegrationUrl { get; set; }
         }
     }

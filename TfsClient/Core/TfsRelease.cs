@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Tfs.Release
+namespace Tfs.ReleaseDto
 {
 
 public class ModifiedBy
@@ -76,7 +76,7 @@ public class Properties
 {
 }
 
-public class Value
+public class TfsRelease
 {
     public int id { get; set; }
     public string name { get; set; }
@@ -104,6 +104,6 @@ public class Value
 public class RootObject
 {
     public int count { get; set; }
-    public List<Value> value { get; set; }
+    public List<TfsRelease> value { get; set; }
 }
 }

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Tfs.Build
+namespace Tfs.BuildDto
 {
 public class Self
 {
@@ -124,7 +124,7 @@ public class Repository
     public bool checkoutSubmodules { get; set; }
 }
 
-public class Value
+public class TfsBuild
 {
     public Links _links { get; set; }
     public List<Plan> plans { get; set; }
@@ -160,7 +160,7 @@ public class Value
 public class RootObject
 {
     public int count { get; set; }
-    public List<Value> value { get; set; }
+    public List<TfsBuild> value { get; set; }
 }
 
 

@@ -1,4 +1,4 @@
-namespace TfsClient
+namespace Tfs.Client
 {
     public class TfsUrl
     {

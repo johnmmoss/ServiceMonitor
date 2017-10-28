@@ -11,69 +11,27 @@ using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using TfsClient;
 using Microsoft.Extensions.Options;
+using Tfs.Client;
 
 namespace ApiPinger.Controllers
 {
     public class HomeController : Controller
     {
-        int SHOWROOM_REL_ID = 11;
-        int SHOWROOM_DEF_ID = 12;
-        int IDENTITY_DEF_ID = 11;
-        int VEHICLE_DEF_ID = 1;
-        string buildUrls = "https://<accountname>.visualstudio.com/DefaultCollection/project-zen/_apis/build/builds?api-version=2.";
-        string releaseUrls = "https://<accountname>.vsrm.visualstudio.com/DefaultCollection/project-zen/_apis/release/releases?api-version=4.0-preview.4";
+        private TfsRepository _tfsRepository;
+        private TfsClientOptions _tfsOptions;
+        private ApiSourceRepository _apiSourceRepository;
 
-        private TfsClientOptions _options;
-
-        public HomeController(IOptions<TfsClientOptions> options)
+        public HomeController(
+            ApiSourceRepository apiSourceRepository,
+            IOptions<TfsClientOptions> tfsOptions)
         {
-            _options = options.Value; 
-        }
-
-        public IList<ApiSource> GetApiSources()
-        {
-            return new List<ApiSource>()
-                {
-                    new ApiSource("Site 1", "http://www.google.co.uk", "http://www.google.co.uk"),
-                    new ApiSource("Site 2", "http://www.google.co.uk", "http://www.google.co.uk"),
-                    new ApiSource("Site 3", "http://www.google.co.uk", "http://www.google.co.uk"),
-                    new ApiSource("Site 4", "http://www.google.co.uk", "http://www.google.co.uk")
-                };
-        }
-       
-        public IList<BuildModel> GetBuildModels(int defintionId)
-        {
-            TfsRepository tfsRepository = new TfsRepository();
-            var buildObjects = tfsRepository.Get<Tfs.Build.RootObject>($"{buildUrls}&definitions={defintionId}").Result;
-
-            return buildObjects.value.Select(x => new BuildModel()
-            {
-                Status = x.status,
-                Result = x.result,
-                Finished = x.finishTime
-            }).OrderByDescending(x => x.Finished).ToList();
-        }
-
-        public IList<ReleaseModel> GetReleaseModel(int definitionId)
-        {
-            TfsRepository tfsRepository = new TfsRepository();
-
-            var buildObjects = tfsRepository.Get<Tfs.Release.RootObject>($"{releaseUrls}&defintionId={definitionId}").Result;
-            return buildObjects.value.Select(x => new ReleaseModel()
-            {
-                Status = x.status,
-                CreatedOn = x.createdOn,
-                Name = x.name
-            }).OrderByDescending(x => x.Name).ToList();
+            _tfsOptions = tfsOptions.Value;
+            _apiSourceRepository = apiSourceRepository;
+            _tfsRepository = new TfsRepository(_tfsOptions);
         }
 
         public IActionResult Index()
         {
-            var showroomBuild = GetBuildModels(SHOWROOM_DEF_ID).First();
-            var vehicleBuild = GetBuildModels(VEHICLE_DEF_ID).First();
-            var identityBuild = GetBuildModels(IDENTITY_DEF_ID).First();
-
-            var showroomRelease = GetReleaseModel(SHOWROOM_REL_ID);
             var url = $"{Request.Scheme}://{Request.Host.Value}";
 
             return View(new IndexModel() { HostUrl = url });
@@ -85,41 +43,60 @@ namespace ApiPinger.Controllers
             model.Items = new List<SourceItemModel>();
             using (var httpClient = new HttpClient())
             {
-                foreach (var apiSource in GetApiSources())
+                foreach (var apiSource in _apiSourceRepository.GetAll())
                 {
-
                     var modelItem = new SourceItemModel();
+
                     modelItem.Name = apiSource.Name;
-                    modelItem.QArl = apiSource.Integration;
-                    modelItem.IntegrationUrl = apiSource.Integration;
-
-                    HttpResponseMessage integrationResponse, qaResponse;
-
-                    try
-                    {
-                        integrationResponse = await httpClient.GetAsync(apiSource.Integration);
-                        modelItem.IntegrationUp = integrationResponse.StatusCode == HttpStatusCode.OK;
-                    }
-                    catch
-                    {
-                        modelItem.IntegrationUp = false;
-                    }
-                    try
-                    {
-                        qaResponse = await httpClient.GetAsync(apiSource.QA);
-                        modelItem.QAUp = qaResponse.StatusCode == HttpStatusCode.OK;
-                    }
-                    catch
-                    {
-
-                        modelItem.QAUp = false;
-                    }
+                    modelItem.QaUrl = apiSource.QaUrl;
+                    modelItem.IntegrationUrl = apiSource.IntegrationUrl;
+                    modelItem.Build = await GetBuildModel(apiSource.BuildDefinitionId);
+                    modelItem.Release = await GetReleaseModel(apiSource.BuildDefinitionId);
+                    modelItem.IntegrationUp = await CheckStatusAsync(httpClient, apiSource.IntegrationUrl);
+                    modelItem.QaUp = await CheckStatusAsync(httpClient, apiSource.IntegrationUrl);
 
                     model.Items.Add(modelItem);
                 }
             }
 
             return Json(model);
+        }
+
+        public async Task<IList<BuildModel>> GetBuildModel(int definitionId)
+        {
+            var builds = await _tfsRepository.GetTfsBuildsAsync(definitionId);
+
+            return builds.Select(x => new BuildModel()
+            {
+                Status = x.status,
+                Result = x.result,
+                Finished = x.finishTime
+            }).OrderByDescending(x => x.Finished).ToList();
+        }
+
+        public async Task<IList<ReleaseModel>> GetReleaseModel(int definitionId)
+        {
+            var releases = await _tfsRepository.GetTfsReleasesAsync(definitionId);
+            return releases.Select(x => new ReleaseModel()
+            {
+                Status = x.status,
+                CreatedOn = x.createdOn,
+                Name = x.name
+            }).OrderByDescending(x => x.Name).ToList();
+        }
+
+        private async Task<bool> CheckStatusAsync(HttpClient httpClient, string url)
+        {
+            HttpResponseMessage responseMessage;
+            try
+            {
+                responseMessage = await httpClient.GetAsync(url);
+                return responseMessage.StatusCode == HttpStatusCode.OK;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         public IActionResult Error()

@@ -23,11 +23,14 @@ namespace ApiPinger
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddOptions();
-            //services.Configure<TfsClientOptions>(Configuration);
-            //services.Configure<TfsClientOptions>(Configuration.GetSection("TfsClientOptions"));
-
-            var tfsClientOptionsConfig = Configuration.GetSection("TfsClientOptions");
+            services.Configure<TfsClientOptions>( options =>
+            {
+                options.AccessToken = "";
+                options.Instance = "";
+                options.Project = "";
+            });
             services.AddMvc();
+            services.AddSingleton(new ApiSourceRepository());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Tfs.Definition
+namespace Tfs.DefinitionDto
 {
 public class Self
 {
@@ -58,7 +58,7 @@ public class Project
     public string visibility { get; set; }
 }
 
-public class Value
+public class Definition
 {
     public Links _links { get; set; }
     public string quality { get; set; }
@@ -80,6 +80,6 @@ public class Value
 public class RootObject
 {
     public int count { get; set; }
-    public List<Value> value { get; set; }
+    public List<Definition> Definitions { get; set; }
 }
 }
