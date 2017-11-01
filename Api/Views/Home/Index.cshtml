@@ -3,9 +3,106 @@
     ViewData["Title"] = "Home Page";
 }
 
-<h1>Api Pinger</h1>
+<style>
 
-<div id="content"></div>
+    th { text-align:center; }
+    .monitor-cell {  width:15%; text-align:center; }
+    .title { width:25%;}
+    h3 { margin:0px; padding:0px; margin-top:5px;}
+</style>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+         
+          <a class="navbar-brand" href="#">Tfs Build Monitor</a>
+        </div>
+      
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+<div class="starter-template">
+        <h1>TFS Build Monitor</h1>
+        <p class="lead">&nbsp;</p>
+      </div>
+        <div class="row">
+            <div class="col">
+                <div id="content"></div>  
+            <table  id="main" class="table table-bordered">
+                <thead>
+                <tr>
+                    <th rowspan="2">Name</th>
+                    <th rowspan="2">Build</th>
+                    <th colspan="2">Release</th>
+                    <th colspan="2">Ping</th>
+                </tr>
+                <tr>
+                    <th>Dev</th>
+                    <th>Test</th>
+                    <th>Dev</th>
+                    <th>Test</th>
+                </tr>
+            </thead>
+            <tbody id="monitor-body">
+                <tr>
+                <td class="monitor-title">
+                    <h3>Showroom Service</h3>
+                </td>
+                <td class="monitor-cell">
+                  <h4> 
+                      <span class="label label-success label-large">
+                        0.1.34  &nbsp; 
+                      <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                      </span>
+                    </h4>
+                </td>
+                <td class="monitor-cell">
+                    <h4> 
+                      <span class="label label-success label-large">
+                        0.1.34  &nbsp; 
+                      <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                      </span>
+                    </h4>
+                </td>
+                <td class="monitor-cell">
+
+                    <h4> 
+                      <span class="label label-danger label-large">
+                        0.1.29  &nbsp; 
+                      <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                      </span>
+                    </h4>
+                </td>
+                <td class="monitor-cell">
+                    <h4> 
+                      <span class="label label-success label-large">
+                        
+                          &nbsp;
+                      <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                          &nbsp;
+                      </span>
+                    </h4>
+                </td>
+                <td class="monitor-cell ">
+                    <h4> 
+                      <span class="label label-danger label-large">
+                          &nbsp;
+                      <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                          &nbsp;
+                      </span>
+                    </h4>
+                </td>
+                </tr>
+            </tbody>
+            </table>
+
+            </div>
+        </div>
+    </div>
+
+    </div>
+
   <script>
        function load() {
            $("#content").fadeOut();
@@ -14,14 +111,14 @@
                 .done(function(data) {
                     $("#content").empty();
                     console.log("Running monitor load...");
-                    var content = "<table border=\"1\" class=\"table\"><tr><td>&nbsp;</td><td>Integration</td><td>QA</td></tr>";
+                    var content = "<table class=\"table\"><tr><td>&nbsp;</td><td>Integration</td><td>QA</td></tr>";
                     for(i=0; i < data.items.length; i++) {
                         var item = data.items[i];
 
                         var integrationUpSpan = item.integrationUp ? "<span>yes</span>" : "<span>no</span>";
                         var qaUpSpan = item.qaUp ? "<span>yes</span>" : "<span>no</span>";
                         
-                        content += "<tr><td><h2>" + item.name + "</h2></td>"
+                        content += "<tr><td><h3>" + item.name + "</h3></td>"
                         content += "<td>" + integrationUpSpan + "</td>";
                         content += "<td>"+ qaUpSpan + "</td>";
                     }
@@ -32,9 +129,14 @@
                 });
         } 
 
+        function refresh() {
+            
+        }
+
        $(document).ready(function() {
            load();
-
+            var markup = "<tr><td></td><td></td><td></td></tr>";
+            $("").append(markup);
            setInterval(load, 10000);
         }); 
    </script>

@@ -25,9 +25,9 @@ namespace ApiPinger
             services.AddOptions();
             services.Configure<TfsClientOptions>( options =>
             {
-                options.AccessToken = "";
-                options.Instance = "";
-                options.Project = "";
+                options.AccessToken = "fyrjsfkkgss62xb7gs4lry5opcss2inrfbcy23tkiqoqed3hy7xa";
+                options.Instance = "zvc";
+                options.Project = "project-zen";
             });
             services.AddMvc();
             services.AddSingleton(new ApiSourceRepository());

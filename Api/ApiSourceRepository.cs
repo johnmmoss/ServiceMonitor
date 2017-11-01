@@ -10,9 +10,9 @@ namespace ApiPinger
         {
             _apiSources = new List<ApiSource>() 
             {
-                New("Service1", 11, 12, 
-                    "http://localhost:5005/api/", 
-                    "http://localhost:5006/api/")
+                New("Showroom Service", 11, 12, 
+                    "http://zen-qa-api-01.ukwest.cloudapp.azure.com:5005/api/", 
+                    "http://zen-qa-api-01.ukwest.cloudapp.azure.com:5005/api/")
             };
         }
         
