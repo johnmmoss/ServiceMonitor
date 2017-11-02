@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ApiPinger
 {
@@ -21,6 +23,11 @@ namespace ApiPinger
             return _apiSources;
         }
 
+        public ApiSource Get(int id)
+        {
+            return _apiSources.First(x => x.Id == id);
+        }
+
         private ApiSource New(string name, int buildDefinitionId, 
                                 int releaseDefinitionId, string integrationUrl,
                                 string qaUrl)
@@ -28,6 +35,7 @@ namespace ApiPinger
             return new ApiSource()
             {
                 Name = name,
+                BuildDefinitionId = buildDefinitionId,
                 ReleaseDefinitionId = releaseDefinitionId,
                 IntegrationUrl = integrationUrl,
                 QaUrl = qaUrl

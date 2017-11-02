@@ -52,8 +52,8 @@ namespace ApiPinger.Controllers
                     modelItem.IntegrationUrl = apiSource.IntegrationUrl;
                     modelItem.Build = await GetBuildModel(apiSource.BuildDefinitionId);
                     modelItem.Release = await GetReleaseModel(apiSource.BuildDefinitionId);
-                    modelItem.IntegrationUp = await CheckStatusAsync(httpClient, apiSource.IntegrationUrl);
-                    modelItem.QaUp = await CheckStatusAsync(httpClient, apiSource.IntegrationUrl);
+                    modelItem.IntegrationUp = await PingAsync(httpClient, apiSource.IntegrationUrl);
+                    modelItem.QaUp = await PingAsync(httpClient, apiSource.IntegrationUrl);
 
                     model.Items.Add(modelItem);
                 }
@@ -62,7 +62,37 @@ namespace ApiPinger.Controllers
             return Json(model);
         }
 
-        public async Task<IList<BuildModel>> GetBuildModel(int definitionId)
+        [HttpGet]
+        public async Task<bool> PingIntegration(int id)
+        {
+            var apiSource = _apiSourceRepository.Get(id);
+
+            using(var httpClient = new HttpClient())
+            {
+                return await PingAsync(httpClient, apiSource.IntegrationUrl);
+            }
+        }
+
+        [HttpGet]
+        public async Task<bool> PingQa(int id)
+        {
+            var apiSource = _apiSourceRepository.Get(id);
+
+            using(var httpClient = new HttpClient())
+            {
+                return await PingAsync(httpClient, apiSource.QaUrl);
+            }
+        }
+
+        [HttpGet]
+        public async Task<BuildModel> Build(int definitionId)
+        {
+            var builds = await GetBuildModel(definitionId);
+
+            return builds.First();
+        }
+
+        private async Task<IList<BuildModel>> GetBuildModel(int definitionId)
         {
             var builds = await _tfsRepository.GetTfsBuildsAsync(definitionId);
 
@@ -70,11 +100,12 @@ namespace ApiPinger.Controllers
             {
                 Status = x.status,
                 Result = x.result,
-                Finished = x.finishTime
+                Finished = x.finishTime,
+                Number = x.buildNumber
             }).OrderByDescending(x => x.Finished).ToList();
         }
 
-        public async Task<IList<ReleaseModel>> GetReleaseModel(int definitionId)
+        private async Task<IList<ReleaseModel>> GetReleaseModel(int definitionId)
         {
             var releases = await _tfsRepository.GetTfsReleasesAsync(definitionId);
             return releases.Select(x => new ReleaseModel()
@@ -85,7 +116,7 @@ namespace ApiPinger.Controllers
             }).OrderByDescending(x => x.Name).ToList();
         }
 
-        private async Task<bool> CheckStatusAsync(HttpClient httpClient, string url)
+        private async Task<bool> PingAsync(HttpClient httpClient, string url)
         {
             HttpResponseMessage responseMessage;
             try

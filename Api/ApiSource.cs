@@ -2,6 +2,7 @@ namespace ApiPinger
 {
     public class ApiSource
         {
+            public int Id { get; set; }
             public string Name { get; set; }
             public int BuildDefinitionId { get; set; }
             public int ReleaseDefinitionId { get; set; }

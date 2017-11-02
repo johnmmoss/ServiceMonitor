@@ -28,7 +28,7 @@
       </div>
         <div class="row">
             <div class="col">
-                <div id="content"></div>  
+
             <table  id="main" class="table table-bordered">
                 <thead>
                 <tr>
@@ -45,55 +45,6 @@
                 </tr>
             </thead>
             <tbody id="monitor-body">
-                <tr>
-                <td class="monitor-title">
-                    <h3>Showroom Service</h3>
-                </td>
-                <td class="monitor-cell">
-                  <h4> 
-                      <span class="label label-success label-large">
-                        0.1.34  &nbsp; 
-                      <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
-                      </span>
-                    </h4>
-                </td>
-                <td class="monitor-cell">
-                    <h4> 
-                      <span class="label label-success label-large">
-                        0.1.34  &nbsp; 
-                      <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
-                      </span>
-                    </h4>
-                </td>
-                <td class="monitor-cell">
-
-                    <h4> 
-                      <span class="label label-danger label-large">
-                        0.1.29  &nbsp; 
-                      <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                      </span>
-                    </h4>
-                </td>
-                <td class="monitor-cell">
-                    <h4> 
-                      <span class="label label-success label-large">
-                        
-                          &nbsp;
-                      <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
-                          &nbsp;
-                      </span>
-                    </h4>
-                </td>
-                <td class="monitor-cell ">
-                    <h4> 
-                      <span class="label label-danger label-large">
-                          &nbsp;
-                      <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                          &nbsp;
-                      </span>
-                    </h4>
-                </td>
-                </tr>
             </tbody>
             </table>
 
@@ -105,27 +56,27 @@
 
   <script>
        function load() {
-           $("#content").fadeOut();
            var url = "@(Model.HostUrl)/home/sources";
             $.get(url)
                 .done(function(data) {
-                    $("#content").empty();
-                    console.log("Running monitor load...");
-                    var content = "<table class=\"table\"><tr><td>&nbsp;</td><td>Integration</td><td>QA</td></tr>";
-                    for(i=0; i < data.items.length; i++) {
-                        var item = data.items[i];
 
-                        var integrationUpSpan = item.integrationUp ? "<span>yes</span>" : "<span>no</span>";
-                        var qaUpSpan = item.qaUp ? "<span>yes</span>" : "<span>no</span>";
-                        
-                        content += "<tr><td><h3>" + item.name + "</h3></td>"
-                        content += "<td>" + integrationUpSpan + "</td>";
-                        content += "<td>"+ qaUpSpan + "</td>";
+                    //var rows = "";
+                    var rows = "";
+                    for(i=0; i < data.items.length; i++) {
+
+                        var row = "<tr><td><h3>" + data.items[i].name + "</h3></td>";
+                        var item = data.items[0];
+                        var build = item.build[0];
+
+                        row += build.result === "succeeded" ? validtd(build.number) : invalidtd(build.number);  
+                        row += "<td></td>";
+                        row += "<td></td>";
+                        row += item.integrationUp ? tick() : cross();
+                        row += item.qaUp ? tick() : cross();
+                        rows += row;
                     }
-                    content += "</table>";
-                    $("#content").append(content);
-                    $("#content").fadeIn();
-                    console.log("Monitor load complete!");
+                    $("#monitor-body").append(rows);
+                   console.log("Monitor load complete!");
                 });
         } 
 
@@ -135,8 +86,28 @@
 
        $(document).ready(function() {
            load();
-            var markup = "<tr><td></td><td></td><td></td></tr>";
-            $("").append(markup);
-           setInterval(load, 10000);
+           //setInterval(load, 10000);
         }); 
+
+        function validtd(label) {
+            var td1 = "<td class=\"monitor-cell\"><h4><span class=\"label label-success label-large\">";
+            var td2 = " &nbsp; <span class=\"glyphicon glyphicon-ok\" aria-hidden=\"true\"></span> </span> </h4> </td>"
+
+            return td1 + label + td2;
+        }
+
+        function invalidtd(label) {
+            var td1 = "<td class=\"monitor-cell\"><h4><span class=\"label label-danger\"><span id=\"1\">";
+            var td2 = "<span class=\"glyphicon glyphicon-ok\" aria-hidden=\"true\"></span> </span> </h4> </td>"
+
+            return td1 + label + td2;
+        }
+
+        function tick() {
+            return "<td class=\"monitor-cell\"> <h4> <span class=\"label label-success label-large\"> &nbsp; <span class=\"glyphicon glyphicon-ok\" aria-hidden=\"true\"></span> &nbsp; </span> </h4> </td>";
+        }
+
+        function cross() {
+            return "<td class=\"monitor-cell\"> <h4> <span class=\"label label-danger label-large\"> &nbsp; <span class=\"glyphicon glyphicon-remove\" aria-hidden=\"true\"></span> &nbsp; </span> </h4> </td>";
+        }
    </script>
