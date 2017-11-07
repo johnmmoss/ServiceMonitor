@@ -21,6 +21,7 @@ namespace ApiPinger
             WebHost.CreateDefaultBuilder(args)
                 // .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseStartup<Startup>()
+                .UseUrls("http://*:8083;")
                 .Build();
     }
 }

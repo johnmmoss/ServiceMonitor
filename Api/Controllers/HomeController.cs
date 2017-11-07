@@ -53,7 +53,7 @@ namespace ApiPinger.Controllers
                     modelItem.Build = await GetBuildModel(apiSource.BuildDefinitionId);
                     modelItem.Release = await GetReleaseModel(apiSource.BuildDefinitionId);
                     modelItem.IntegrationUp = await PingAsync(httpClient, apiSource.IntegrationUrl);
-                    modelItem.QaUp = await PingAsync(httpClient, apiSource.IntegrationUrl);
+                    modelItem.QaUp = await PingAsync(httpClient, apiSource.QaUrl);
 
                     model.Items.Add(modelItem);
                 }

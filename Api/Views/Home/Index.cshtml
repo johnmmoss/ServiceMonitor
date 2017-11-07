@@ -40,8 +40,8 @@
                 <tr>
                     <th>Dev</th>
                     <th>Test</th>
-                    <th>Dev</th>
-                    <th>Test</th>
+                    <th>Int</th>
+                    <th>QA</th>
                 </tr>
             </thead>
             <tbody id="monitor-body">
@@ -65,7 +65,7 @@
                     for(i=0; i < data.items.length; i++) {
 
                         var row = "<tr><td><h3>" + data.items[i].name + "</h3></td>";
-                        var item = data.items[0];
+                        var item = data.items[i];
                         var build = item.build[0];
 
                         row += build.result === "succeeded" ? validtd(build.number) : invalidtd(build.number);  
@@ -80,13 +80,13 @@
                 });
         } 
 
-        function refresh() {
-            
+        function reload() {
+            $("#monitor-body").empty();
+            load();
         }
-
        $(document).ready(function() {
            load();
-           //setInterval(load, 10000);
+           setInterval(reload, 30000);
         }); 
 
         function validtd(label) {
