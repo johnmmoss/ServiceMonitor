@@ -21,11 +21,11 @@ namespace Tfs.Client
             _tfsUrl = new TfsUrl(_tfsClientOptions.Instance, _tfsClientOptions.Project);            
         }
 
-        public async Task<IList<TfsRelease>> GetTfsReleasesAsync(int defintionId)
+        public async Task<TfsRelease> GetTfsReleaseAsync(int defintionId)
         {
             var url = _tfsUrl.ReleaseApi + $"&definitions={defintionId}";
-            var dto = await Get<Tfs.ReleaseDto.RootObject>(url);
-            return dto.value;
+            var dto = await Get<TfsRelease>(url);
+            return dto;
         }
 
         public async Task<IList<TfsBuild>> GetTfsBuildsAsync(int defintionId)
