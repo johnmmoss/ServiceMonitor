@@ -67,7 +67,7 @@ namespace ApiPinger.Controllers
         {
             var apiSource = _apiSourceRepository.Get(id);
 
-            using(var httpClient = new HttpClient())
+            using (var httpClient = new HttpClient())
             {
                 return await PingAsync(httpClient, apiSource.IntegrationUrl);
             }
@@ -78,7 +78,7 @@ namespace ApiPinger.Controllers
         {
             var apiSource = _apiSourceRepository.Get(id);
 
-            using(var httpClient = new HttpClient())
+            using (var httpClient = new HttpClient())
             {
                 return await PingAsync(httpClient, apiSource.QaUrl);
             }
@@ -107,8 +107,8 @@ namespace ApiPinger.Controllers
 
         private async Task<IList<ReleaseModel>> GetReleaseModel(int definitionId)
         {
-            var releases = await _tfsRepository.GetTfsReleasesAsync(definitionId);
-            return releases.Select(x => new ReleaseModel()
+            var release = await _tfsRepository.GetTfsReleaseAsync(definitionId);
+            return release.environments.Select(x => new ReleaseModel()
             {
                 Status = x.status,
                 CreatedOn = x.createdOn,
