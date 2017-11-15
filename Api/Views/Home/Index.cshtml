@@ -75,13 +75,15 @@
                         row += item.qaUp ? tick() : cross();
                         rows += row;
                     }
+                    $("#monitor-body").fadeOut();
+                    $("#monitor-body").empty();
                     $("#monitor-body").append(rows);
+                    $("#monitor-body").fadeIn();
                    console.log("Monitor load complete!");
                 });
         } 
 
         function reload() {
-            $("#monitor-body").empty();
             load();
         }
        $(document).ready(function() {

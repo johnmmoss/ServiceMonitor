@@ -12,6 +12,9 @@ using Newtonsoft.Json;
 using TfsClient;
 using Microsoft.Extensions.Options;
 using Tfs.Client;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Concurrent;
 
 namespace ApiPinger.Controllers
 {
@@ -20,14 +23,17 @@ namespace ApiPinger.Controllers
         private TfsRepository _tfsRepository;
         private TfsClientOptions _tfsOptions;
         private ApiSourceRepository _apiSourceRepository;
+        private ILogger _logger;
 
         public HomeController(
             ApiSourceRepository apiSourceRepository,
-            IOptions<TfsClientOptions> tfsOptions)
+            IOptions<TfsClientOptions> tfsOptions,
+            ILogger<HomeController> logger)
         {
             _tfsOptions = tfsOptions.Value;
             _apiSourceRepository = apiSourceRepository;
             _tfsRepository = new TfsRepository(_tfsOptions);
+            _logger = logger;
         }
 
         public IActionResult Index()
@@ -37,14 +43,28 @@ namespace ApiPinger.Controllers
             return View(new IndexModel() { HostUrl = url });
         }
 
-        public async Task<IActionResult> Sources()
+        public IActionResult Sources()
         {
-            var model = new SourceModel();
-            model.Items = new List<SourceItemModel>();
-            using (var httpClient = new HttpClient())
+            _logger.LogInformation("Loading sources...");
+
+            var collection = new ConcurrentBag<SourceItemModel>(); 
+            var apiSources = _apiSourceRepository.GetAll() as List<ApiSource>;
+
+            Task.WaitAll(apiSources.Select((item) => Load(collection, item)).ToArray());
+               
+            var items = new List<SourceItemModel>();
+            items = collection.ToList();
+            items.OrderBy(x => x.Name);
+
+            return Json(new SourceModel()
             {
-                foreach (var apiSource in _apiSourceRepository.GetAll())
-                {
+                Items = items
+            });
+        }
+        private async Task Load(ConcurrentBag<SourceItemModel> collection, ApiSource apiSource)
+        {
+            try{
+                    _logger.LogInformation($"Loading {apiSource.Name}...");
                     var modelItem = new SourceItemModel();
 
                     modelItem.Name = apiSource.Name;
@@ -52,14 +72,16 @@ namespace ApiPinger.Controllers
                     modelItem.IntegrationUrl = apiSource.IntegrationUrl;
                     modelItem.Build = await GetBuildModel(apiSource.BuildDefinitionId);
                     modelItem.Release = await GetReleaseModel(apiSource.BuildDefinitionId);
-                    modelItem.IntegrationUp = await PingAsync(httpClient, apiSource.IntegrationUrl);
-                    modelItem.QaUp = await PingAsync(httpClient, apiSource.QaUrl);
+                    modelItem.IntegrationUp = await PingAsync(apiSource.IntegrationUrl);
+                    modelItem.QaUp = await PingAsync(apiSource.QaUrl);
 
-                    model.Items.Add(modelItem);
-                }
+                    _logger.LogInformation($"Loading {apiSource.Name} complete!");
+                    collection.Add(modelItem);
+            } 
+            catch (Exception ex)
+            {
+                _logger.LogError("1", ex);
             }
-
-            return Json(model);
         }
 
         [HttpGet]
@@ -69,7 +91,7 @@ namespace ApiPinger.Controllers
 
             using(var httpClient = new HttpClient())
             {
-                return await PingAsync(httpClient, apiSource.IntegrationUrl);
+                return await PingAsync(apiSource.IntegrationUrl);
             }
         }
 
@@ -78,10 +100,7 @@ namespace ApiPinger.Controllers
         {
             var apiSource = _apiSourceRepository.Get(id);
 
-            using(var httpClient = new HttpClient())
-            {
-                return await PingAsync(httpClient, apiSource.QaUrl);
-            }
+            return await PingAsync(apiSource.QaUrl);
         }
 
         [HttpGet]
@@ -116,17 +135,21 @@ namespace ApiPinger.Controllers
             }).OrderByDescending(x => x.Name).ToList();
         }
 
-        private async Task<bool> PingAsync(HttpClient httpClient, string url)
+        private async Task<bool> PingAsync(string url)
         {
-            HttpResponseMessage responseMessage;
-            try
+            using(var httpClient = new HttpClient())
             {
-                responseMessage = await httpClient.GetAsync(url);
-                return responseMessage.StatusCode == HttpStatusCode.OK;
-            }
-            catch
-            {
-                return false;
+                HttpResponseMessage responseMessage;
+                try
+                {
+                    httpClient.Timeout = TimeSpan.FromSeconds(10);
+                    responseMessage = await httpClient.GetAsync(url);
+                    return responseMessage.StatusCode == HttpStatusCode.OK;
+                }
+                catch
+                {
+                    return false;
+                }
             }
         }
 
