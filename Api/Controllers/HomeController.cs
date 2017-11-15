@@ -100,14 +100,7 @@ namespace ApiPinger.Controllers
         {
             var apiSource = _apiSourceRepository.Get(id);
 
-<<<<<<< HEAD
-            using (var httpClient = new HttpClient())
-            {
-                return await PingAsync(httpClient, apiSource.QaUrl);
-            }
-=======
             return await PingAsync(apiSource.QaUrl);
->>>>>>> UpdateUI
         }
 
         [HttpGet]
