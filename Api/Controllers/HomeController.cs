@@ -71,7 +71,7 @@ namespace ApiPinger.Controllers
                     modelItem.QaUrl = apiSource.QaUrl;
                     modelItem.IntegrationUrl = apiSource.IntegrationUrl;
                     modelItem.Build = await GetBuildModel(apiSource.BuildDefinitionId);
-                    modelItem.Release = await GetReleaseModel(apiSource.BuildDefinitionId);
+                    //modelItem.Release = await GetReleaseModel(apiSource.BuildDefinitionId);
                     modelItem.IntegrationUp = await PingAsync(apiSource.IntegrationUrl);
                     modelItem.QaUp = await PingAsync(apiSource.QaUrl);
 

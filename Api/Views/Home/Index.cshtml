@@ -9,12 +9,29 @@
     .monitor-cell {  width:15%; text-align:center; }
     .title { width:25%;}
     h3 { margin:0px; padding:0px; margin-top:5px;}
-</style>
-<nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-         
-          <a class="navbar-brand" href="#">Tfs Build Monitor</a>
+    .loader {
+        border: 16px solid #f3f3f3; /* Light grey */
+        border-top: 16px solid #a0a0a0; /* Blue */
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 2s linear infinite;
+        margin:0% 50%;
+        margin-top: 30px;
+        margin-bottom:30px;
+    }
+
+    @@keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    </style>
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+            
+            <a class="navbar-brand" href="#">Tfs Build Monitor</a>
         </div>
       
         </div><!--/.nav-collapse -->
@@ -45,9 +62,14 @@
                 </tr>
             </thead>
             <tbody id="monitor-body">
+                <tr>
+                    <td colspan="7"></td>
+                </tr>
             </tbody>
             </table>
-
+            <div>
+                <div class="loader"></div>
+            </div>
             </div>
         </div>
     </div>
@@ -60,7 +82,6 @@
             $.get(url)
                 .done(function(data) {
 
-                    //var rows = "";
                     var rows = "";
                     for(i=0; i < data.items.length; i++) {
 
@@ -78,17 +99,16 @@
                     $("#monitor-body").fadeOut();
                     $("#monitor-body").empty();
                     $("#monitor-body").append(rows);
+                    $(".loader").hide();
                     $("#monitor-body").fadeIn();
-                   console.log("Monitor load complete!");
+                    console.log("Monitor load complete!");
                 });
         } 
 
-        function reload() {
-            load();
-        }
        $(document).ready(function() {
-           load();
-           setInterval(reload, 30000);
+           $("#monitor-body").hide();
+           load();  
+           setInterval(load, 10000);
         }); 
 
         function validtd(label) {
