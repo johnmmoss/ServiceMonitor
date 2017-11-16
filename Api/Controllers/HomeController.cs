@@ -40,7 +40,12 @@ namespace ApiPinger.Controllers
         {
             var url = $"{Request.Scheme}://{Request.Host.Value}";
 
-            return View(new IndexModel() { HostUrl = url });
+            return View(new IndexModel() 
+            { 
+                HostUrl = url,
+                PageTitle = $"{_tfsOptions.Project} / {_tfsOptions.Instance}"
+
+            });
         }
 
         public IActionResult Sources()
@@ -71,7 +76,7 @@ namespace ApiPinger.Controllers
                     modelItem.QaUrl = apiSource.QaUrl;
                     modelItem.IntegrationUrl = apiSource.IntegrationUrl;
                     modelItem.Build = await GetBuildModel(apiSource.BuildDefinitionId);
-                    //modelItem.Release = await GetReleaseModel(apiSource.BuildDefinitionId);
+                    modelItem.Release = await GetReleaseModel(apiSource.BuildDefinitionId);
                     modelItem.IntegrationUp = await PingAsync(apiSource.IntegrationUrl);
                     modelItem.QaUp = await PingAsync(apiSource.QaUrl);
 
@@ -127,12 +132,17 @@ namespace ApiPinger.Controllers
         private async Task<IList<ReleaseModel>> GetReleaseModel(int definitionId)
         {
             var release = await _tfsRepository.GetTfsReleaseAsync(definitionId);
-            return release.environments.Select(x => new ReleaseModel()
+            if(release.environments != null)
             {
-                Status = x.status,
-                CreatedOn = x.createdOn,
-                Name = x.name
-            }).OrderByDescending(x => x.Name).ToList();
+                var qa = release.environments.FirstOrDefault(x => x.name.ToLower() == "qa");
+            }
+            //return release.environments.Select(x => new ReleaseModel()
+            //{
+            //    Status = x.status,
+            //    CreatedOn = x.createdOn,
+            //    Name = x.name
+            //}).OrderByDescending(x => x.Name).ToList();
+            return null;
         }
 
         private async Task<bool> PingAsync(string url)
