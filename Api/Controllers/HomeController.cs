@@ -43,7 +43,7 @@ namespace ApiPinger.Controllers
             return View(new IndexModel() 
             { 
                 HostUrl = url,
-                PageTitle = $"{_tfsOptions.Project} / {_tfsOptions.Instance}"
+                PageTitle = $"{_tfsOptions.Instance} / {_tfsOptions.Project}"
 
             });
         }
