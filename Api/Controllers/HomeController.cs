@@ -43,7 +43,7 @@ namespace ApiPinger.Controllers
             return View(new IndexModel() 
             { 
                 HostUrl = url,
-                PageTitle = $"{_tfsOptions.Project} / {_tfsOptions.Instance}"
+                PageTitle = $"{_tfsOptions.Instance} / {_tfsOptions.Project}"
 
             });
         }
@@ -76,7 +76,7 @@ namespace ApiPinger.Controllers
                     modelItem.QaUrl = apiSource.QaUrl;
                     modelItem.IntegrationUrl = apiSource.IntegrationUrl;
                     modelItem.Build = await GetBuildModel(apiSource.BuildDefinitionId);
-                    modelItem.Release = await GetReleaseModel(apiSource.BuildDefinitionId);
+                    modelItem.ReleaseIntegration = await GetIntegrationReleaseModel(apiSource.BuildDefinitionId);
                     modelItem.IntegrationUp = await PingAsync(apiSource.IntegrationUrl);
                     modelItem.QaUp = await PingAsync(apiSource.QaUrl);
 
@@ -129,19 +129,22 @@ namespace ApiPinger.Controllers
             }).OrderByDescending(x => x.Finished).ToList();
         }
 
-        private async Task<IList<ReleaseModel>> GetReleaseModel(int definitionId)
+        private async Task<ReleaseModel> GetIntegrationReleaseModel(int definitionId)
         {
-            var release = await _tfsRepository.GetTfsReleaseAsync(definitionId);
-            if(release.environments != null)
+            var releases = await _tfsRepository.GetTfsReleaseAsync(definitionId);
+            var current = releases.FirstOrDefault();
+
+            if(current != null && current.environments != null)
             {
-                var qa = release.environments.FirstOrDefault(x => x.name.ToLower() == "qa");
+                var integration = current.environments.Find(x => x.name.ToLower() == "integration" || x.name.ToLower() == "intergration" && x.status.ToLower() != "notstarted");
+                if (integration != null)
+                {
+                    var integrationModel = new ReleaseModel();
+                    integrationModel.Status= integration.status;
+                    integrationModel.Name = current.name.Contains("-") ? current.name.Split('-')[1] : current.name;
+                    return integrationModel;
+                }
             }
-            //return release.environments.Select(x => new ReleaseModel()
-            //{
-            //    Status = x.status,
-            //    CreatedOn = x.createdOn,
-            //    Name = x.name
-            //}).OrderByDescending(x => x.Name).ToList();
             return null;
         }
 

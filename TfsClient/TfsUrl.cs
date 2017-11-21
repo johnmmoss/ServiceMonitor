@@ -3,8 +3,7 @@ namespace Tfs.Client
     public class TfsUrl
     {
         private string buildTemplate = "https://{0}.visualstudio.com/DefaultCollection/{1}/_apis/build/builds?api-version=2.0";
-        private string releaseTemplate = "https://{0}.vsrm.visualstudio.com/DefaultCollection/{1}/_apis/release/releases?api-version=4.0-preview.4";
-
+        private string releaseTemplate = "https://{0}.vsrm.visualstudio.com/DefaultCollection/{1}/_apis/release/releases?$expand=environments&definitionId=";
         public string Instance { get; private set; }
         public string Project { get; private set; }
         public string ReleaseApi { get; private set; }
