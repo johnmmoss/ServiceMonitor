@@ -34,7 +34,15 @@ namespace ApiPinger
 
                 New("Email Service", 15, 16, 
                     "http://zen-int-api-01.ukwest.cloudapp.azure.com:5015/swagger", 
-                    "http://zen-qa-api-01.ukwest.cloudapp.azure.com:5015/swagger")
+                    "http://zen-qa-api-01.ukwest.cloudapp.azure.com:5015/swagger"),
+
+                New("My Account Service", 16, 17, 
+                    "http://zen-int-api-01.ukwest.cloudapp.azure.com:5007/swagger", 
+                    "http://zen-qa-api-01.ukwest.cloudapp.azure.com:5007/swagger"),
+
+                New("Underwriting Service", 18, 19, 
+                    "http://zen-int-api-01.ukwest.cloudapp.azure.com:5007/swagger", 
+                    "http://zen-qa-api-01.ukwest.cloudapp.azure.com:5007/swagger")
         
             };
         }

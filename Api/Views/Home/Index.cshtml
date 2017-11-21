@@ -1,6 +1,6 @@
 ﻿@model ApiPinger.Controllers.IndexModel
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = Model.PageTitle;
 }
 
 <style>
@@ -29,6 +29,8 @@
         100% { transform: rotate(360deg); }
     }
 
+    .subheader th { font-weight:10px; font-weight: normal;}
+    .header th { font-size:16px; font-weight: bold;background-color:#0078d7; color:white;}
     </style>
     <nav class="navbar  navbar-fixed-top">
         <div class="container">
@@ -48,17 +50,19 @@
         <div class="row">
             <div class="col">
 
-            <table  id="main" class="table table-bordered">
+            <table  id="main" class="table">
                 <thead>
-                <tr>
-                    <th rowspan="2">Name</th>
-                    <th rowspan="2">Build</th>
+                <tr class="header">
+                    <th >Name</th>
+                    <th >Build</th>
                     <th colspan="2">Release</th>
                     <th colspan="2">Ping</th>
                 </tr>
-                <tr>
-                    <th>Dev</th>
-                    <th>Test</th>
+                <tr class="subheader">
+                    <th>&nbsp;</th>
+                    <th>&nbsp;</th>
+                    <th>Int</th>
+                    <th>QA</th>
                     <th>Int</th>
                     <th>QA</th>
                 </tr>
@@ -99,7 +103,11 @@
                         } else {
                             row += "<td>&nbsp;</td>";
                         }
-                        row += "<td>&nbsp;</td>"; // Qa
+                        if (item.releaseQa != null) {
+                            row += item.releaseQa.status === "succeeded" ? validtd(item.releaseQa.name) : invalidtd(item.releaseQa.name);
+                        } else {
+                            row += "<td>&nbsp;</td>";
+                        }
                         row += item.integrationUp ? tick() : cross();
                         row += item.qaUp ? tick() : cross();
                         rows += row;

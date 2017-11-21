@@ -15,6 +15,7 @@ using Tfs.Client;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
+using Tfs.ReleaseDto;
 
 namespace ApiPinger.Controllers
 {
@@ -59,7 +60,7 @@ namespace ApiPinger.Controllers
                
             var items = new List<SourceItemModel>();
             items = collection.ToList();
-            items.OrderBy(x => x.Name.Length);
+            items = items.OrderBy(x => x.Name).ToList();
 
             return Json(new SourceModel()
             {
@@ -77,6 +78,7 @@ namespace ApiPinger.Controllers
                     modelItem.IntegrationUrl = apiSource.IntegrationUrl;
                     modelItem.Build = await GetBuildModel(apiSource.BuildDefinitionId);
                     modelItem.ReleaseIntegration = await GetIntegrationReleaseModel(apiSource.ReleaseDefinitionId);
+                    modelItem.ReleaseQa = await GetQaReleaseModel(apiSource.ReleaseDefinitionId);
                     modelItem.IntegrationUp = await PingAsync(apiSource.IntegrationUrl);
                     modelItem.QaUp = await PingAsync(apiSource.QaUrl);
 
@@ -145,6 +147,24 @@ namespace ApiPinger.Controllers
                     return integrationModel;
                 }
             }
+            return null;
+        }
+
+        private async Task<ReleaseModel> GetQaReleaseModel(int definitionId)
+        {
+
+            var releases = await _tfsRepository.GetTfsReleaseAsync(definitionId);
+            var qa = releases.FirstOrDefault( x=> x.environments.Where(y => y.name.ToLower() == "qa" && y.status.ToLower() != "notstarted").Any() );
+
+            if (qa != null)
+            {
+                var qaModel = new ReleaseModel();
+                var qaEnvironment = qa.environments.First(x => x.name.ToLower() == "qa");
+                qaModel.Status= qaEnvironment.status;
+                qaModel.Name = qa.name.Contains("-") ? qa.name.Split('-')[1] : qa.name;
+                return qaModel;
+            }
+
             return null;
         }
 
