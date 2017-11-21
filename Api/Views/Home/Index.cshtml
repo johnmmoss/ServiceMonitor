@@ -85,15 +85,21 @@
                 .done(function(data) {
 
                     var rows = "";
-                    for(i=0; i < data.items.length; i++) {
+                    for(var i=0; i < data.items.length; i++) {
 
                         var row = "<tr><td><h3>" + data.items[i].name + "</h3></td>";
                         var item = data.items[i];
                         var build = item.build[0];
 
                         row += build.result === "succeeded" ? validtd(build.number) : invalidtd(build.number);  
-                        row += "<td></td>";
-                        row += "<td></td>";
+                        
+                        // If we have integration release information then show it.
+                        if (item.releaseIntegration != null) {
+                            row += item.releaseIntegration.status === "succeeded" ? validtd(item.releaseIntegration.name) : invalidtd(item.releaseIntegration.name);
+                        } else {
+                            row += "<td>&nbsp;</td>";
+                        }
+                        row += "<td>&nbsp;</td>"; // Qa
                         row += item.integrationUp ? tick() : cross();
                         row += item.qaUp ? tick() : cross();
                         rows += row;

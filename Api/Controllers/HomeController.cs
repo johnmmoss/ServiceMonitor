@@ -59,7 +59,7 @@ namespace ApiPinger.Controllers
                
             var items = new List<SourceItemModel>();
             items = collection.ToList();
-            items.OrderBy(x => x.Name);
+            items.OrderBy(x => x.Name.Length);
 
             return Json(new SourceModel()
             {
@@ -76,7 +76,7 @@ namespace ApiPinger.Controllers
                     modelItem.QaUrl = apiSource.QaUrl;
                     modelItem.IntegrationUrl = apiSource.IntegrationUrl;
                     modelItem.Build = await GetBuildModel(apiSource.BuildDefinitionId);
-                    modelItem.ReleaseIntegration = await GetIntegrationReleaseModel(apiSource.BuildDefinitionId);
+                    modelItem.ReleaseIntegration = await GetIntegrationReleaseModel(apiSource.ReleaseDefinitionId);
                     modelItem.IntegrationUp = await PingAsync(apiSource.IntegrationUrl);
                     modelItem.QaUp = await PingAsync(apiSource.QaUrl);
 
