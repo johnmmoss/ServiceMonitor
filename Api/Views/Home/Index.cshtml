@@ -99,12 +99,12 @@
                         
                         // If we have integration release information then show it.
                         if (item.releaseIntegration != null) {
-                            row += item.releaseIntegration.status === "succeeded" ? validtd(item.releaseIntegration.name) : invalidtd(item.releaseIntegration.name);
+                            row += getRow(item.releaseIntegration.status,item.releaseIntegration.name);
                         } else {
                             row += "<td>&nbsp;</td>";
                         }
                         if (item.releaseQa != null) {
-                            row += item.releaseQa.status === "succeeded" ? validtd(item.releaseQa.name) : invalidtd(item.releaseQa.name);
+                            row += getRow(item.releaseQa.status, item.releaseQa.name);
                         } else {
                             row += "<td>&nbsp;</td>";
                         }
@@ -127,6 +127,19 @@
            setInterval(load, 10000);
         }); 
 
+         function getRow(status, name) {
+
+            console.log(status) ;
+            if( status === "succeeded") {
+                return validtd(name);
+            } else if (status === "rejected") {
+                return invalidtd(name);
+            } else if (status === "inProgress") {
+                return refreshtd(name);
+            } else {
+                return "<td>&nbsp;</td>";
+            }
+        }
         function validtd(label) {
             var td1 = "<td class=\"monitor-cell\"><h4><span class=\"label label-success label-large\">";
             var td2 = " &nbsp; <span class=\"glyphicon glyphicon-ok\" aria-hidden=\"true\"></span> </span> </h4> </td>"
@@ -140,6 +153,14 @@
 
             return td1 + label + td2;
         }
+
+         function refreshtd(label) {
+            var td1 = "<td class=\"monitor-cell\"><h4><span class=\"label label-warning\"><span id=\"1\">";
+            var td2 = " &nbsp; <span class=\"glyphicon glyphicon-refresh\" aria-hidden=\"true\"></span> </span> </h4> </td>"
+
+            return td1 + label + td2;
+        }
+
 
         function tick() {
             return "<td class=\"monitor-cell\"> <h4> <span class=\"label label-success label-large\"> &nbsp; <span class=\"glyphicon glyphicon-ok\" aria-hidden=\"true\"></span> &nbsp; </span> </h4> </td>";
