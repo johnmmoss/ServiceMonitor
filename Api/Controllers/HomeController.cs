@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using Tfs.ReleaseDto;
+using Api.Models;
 
 namespace ApiPinger.Controllers
 {
@@ -67,6 +68,24 @@ namespace ApiPinger.Controllers
                 Items = items
             });
         }
+
+        public async Task<IActionResult> PullRequests()
+        {
+            var pullRequests = await _tfsRepository.GetTfsPullRequestAsync();
+            var zenithPullRequests = pullRequests
+                    .Where(x => x.repository.name != "project-zen")
+                    .OrderBy(x => x.creationDate)
+                    .ToList();
+
+            return Json(zenithPullRequests.Select(x=> new PullRequestModel()
+            {
+                Name = x.title,
+                RepositoryName = x.repository.name,
+                CreatedBy = x.createdBy.displayName,
+                CreatedDate = x.creationDate.ToString("dddd dd - hh:mm")
+            }));
+        }
+
         private async Task Load(ConcurrentBag<SourceItemModel> collection, ApiSource apiSource)
         {
             try{

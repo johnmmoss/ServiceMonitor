@@ -4,8 +4,6 @@
 }
 
 <style>
-
-
     .navbar { background-color: #0078d7 }
     .navbar-brand { color: #fff}
     th { text-align:center; }
@@ -33,7 +31,6 @@
         100% { transform: rotate(360deg); }
     }
 
-
     .subheader th { font-weight:10px; font-weight: normal;}
     .header th { font-size:16px; font-weight: bold;background-color:#0078d7; color:white;}
 
@@ -41,7 +38,7 @@
     <nav class="navbar  navbar-fixed-top">
         <div class="container">
             <div class="navbar-header">
-            <a class="navbar-brand" href="#">TFS Monitor</a>
+            <a class="navbar-brand" href="#">TFS Monitor - @Model.PageTitle</a>
         </div>
       
         </div><!--/.nav-collapse -->
@@ -49,13 +46,11 @@
     </nav>
 
     <div class="container">
-<div class="starter-template">
-        <h1>@Model.PageTitle</h1>
-        <p class="lead">&nbsp;</p>
-      </div>
+        <div class="row">
+            &nbsp;
+        </div>
         <div class="row">
             <div class="col">
-
             <table  id="main" class="table">
                 <thead>
                 <tr class="header">
@@ -84,13 +79,40 @@
             </div>
             </div>
         </div>
+        <div class="row">
+                <table  id="pullRequests" class="table">
+                    <thead>
+                    <tr class="header">
+                        <th>Pull Requests</th>
+                        <th>Repo</th>
+                        <th>Created</th>
+                        <th>By</th>
+                    </tr>
+                </thead>
+                <tbody id="pullrequests-body">
+                </tbody>
+            </table>
+        </div>
+        <div id="refreshed-container">
+            Last refreshed - <b><span id="refreshed"></span></b>
+        </div>
     </div>
+</div>
+<script>
+     function loadPullRequests() {
 
-    </div>
-    <div id="refreshed-container">
-        Last refreshed - <b><span id="refreshed"></span></b>
-    </div>
-  <script>
+        var url = "@(Model.HostUrl)/home/pullrequests";
+        $.get(url)
+            .done(function(items) {
+                var rows = "";
+                    for(var i=0; i < items.length; i++) {
+                        var item = items[i];
+                        rows+= "<tr><td><h4>" + item.name + "</h4></td><td>" + item.repositoryName + "</td><td>" + item.createdDate + "</td><td>" + item.createdBy + "</td></tr>";
+                    }  
+                    display("#pullrequests-body", rows);
+                });
+      } 
+
        function load() {
            var url = "@(Model.HostUrl)/home/sources";
             $.get(url)
@@ -99,7 +121,7 @@
                     var rows = "";
                     for(var i=0; i < data.items.length; i++) {
 
-                        var row = "<tr><td><h3>" + data.items[i].name + "</h3></td>";
+                        var row = "<tr><td><h4>" + data.items[i].name + "</h4></td>";
                         var item = data.items[i];
                         var build = item.build[0];
 
@@ -119,25 +141,29 @@
                         row += item.qaUp ? tick() : cross();
                         rows += row;
                     }
-                    $("#monitor-body").fadeOut();
-                    $("#monitor-body").empty();
-                    $("#monitor-body").append(rows);
+                    display("#monitor-body", rows);
                     $(".loader").hide();
-                    $("#monitor-body").fadeIn();
-
                     setLastRefreshed();
-                    console.log("Monitor load complete!");
                 });
         } 
 
        $(document).ready(function() {
            $("#refreshed-container").hide();
            $("#monitor-body").hide();
+           $("#pullrequests-body").hide();
            load();  
-           setInterval(load, 10000);
+           loadPullRequests();
+           setInterval(load, 30000);
+           setInterval(loadPullRequests, 60000)
         }); 
 
-         function getRow(status, name) {
+        function display(id, data) {
+            $(id).fadeOut();
+            $(id).empty();
+            $(id).append(data);
+            $(id).fadeIn();
+        }
+        function getRow(status, name) {
 
             console.log(status) ;
             if( status === "succeeded") {

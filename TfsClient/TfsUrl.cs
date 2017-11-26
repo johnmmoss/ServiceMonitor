@@ -4,10 +4,12 @@ namespace Tfs.Client
     {
         private string buildTemplate = "https://{0}.visualstudio.com/DefaultCollection/{1}/_apis/build/builds?api-version=2.0";
         private string releaseTemplate = "https://{0}.vsrm.visualstudio.com/DefaultCollection/{1}/_apis/release/releases?$expand=environments&definitionId=";
+        private string pullRequestTemplate = "https://{0}.visualstudio.com/DefaultCollection/{1}/_apis/git/pullRequests?status=active";
         public string Instance { get; private set; }
         public string Project { get; private set; }
         public string ReleaseApi { get; private set; }
         public string BuildApi { get; private set; }
+        public string PullRequestsApi { get; private set; }
 
         public TfsUrl(string instance, string project)
         {
@@ -16,6 +18,7 @@ namespace Tfs.Client
 
            BuildApi = string.Format(buildTemplate, instance, project);
            ReleaseApi = string.Format(releaseTemplate, instance, project);
+           PullRequestsApi = string.Format(pullRequestTemplate, instance, project);
         }
 
         public string GetReleaseUrl(int definitionId)

@@ -5,6 +5,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Tfs.BuildDto;
+using Tfs.PullRequestDto;
 using Tfs.ReleaseDto;
 using TfsClient;
 
@@ -35,6 +36,12 @@ namespace Tfs.Client
             return dto.value;
         }
 
+        public async Task<IList<TfsPullRequest>> GetTfsPullRequestAsync()
+        {
+            var url = _tfsUrl.PullRequestsApi;
+            var dto = await Get<Tfs.PullRequestDto.RootObject>(url);
+            return dto.value;
+        }
         public async Task<T> Get<T>(string url)
         {
             using (HttpClient client = new HttpClient())
