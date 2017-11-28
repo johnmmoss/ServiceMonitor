@@ -74,7 +74,7 @@ namespace ApiPinger.Controllers
             var pullRequests = await _tfsRepository.GetTfsPullRequestAsync();
             var zenithPullRequests = pullRequests
                     .Where(x => x.repository.name != "project-zen")
-                    .OrderBy(x => x.creationDate)
+                    .OrderBy(x => x.repository.name).ThenBy(x => x.creationDate)
                     .ToList();
 
             return Json(zenithPullRequests.Select(x=> new PullRequestModel()
@@ -82,7 +82,7 @@ namespace ApiPinger.Controllers
                 Name = x.title,
                 RepositoryName = x.repository.name,
                 CreatedBy = x.createdBy.displayName,
-                CreatedDate = x.creationDate.ToString("dddd dd - hh:mm")
+                CreatedDate = x.creationDate.ToString("dddd dd - HH:mm")
             }));
         }
 

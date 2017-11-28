@@ -38,9 +38,9 @@
     <nav class="navbar  navbar-fixed-top">
         <div class="container">
             <div class="navbar-header">
-            <a class="navbar-brand" href="#">TFS Monitor - @Model.PageTitle</a>
+            <a class="navbar-brand" href="#">TFS Monitor &nbsp; :: &nbsp; Zenith Retail Middleware &nbsp; :: &nbsp; @Model.PageTitle</a>
         </div>
-      
+
         </div><!--/.nav-collapse -->
       </div>
     </nav>
@@ -51,6 +51,7 @@
         </div>
         <div class="row">
             <div class="col">
+                <h2>Release Status</h2>
             <table  id="main" class="table">
                 <thead>
                 <tr class="header">
@@ -80,11 +81,12 @@
             </div>
         </div>
         <div class="row">
+            <h2>Pull Requests</h2>
                 <table  id="pullRequests" class="table">
                     <thead>
                     <tr class="header">
-                        <th>Pull Requests</th>
                         <th>Repo</th>
+                        <th>Name</th>
                         <th>Created</th>
                         <th>By</th>
                     </tr>
@@ -107,7 +109,7 @@
                 var rows = "";
                     for(var i=0; i < items.length; i++) {
                         var item = items[i];
-                        rows+= "<tr><td><h4>" + item.name + "</h4></td><td>" + item.repositoryName + "</td><td>" + item.createdDate + "</td><td>" + item.createdBy + "</td></tr>";
+                        rows+= "<tr><td><h4>" + item.repositoryName + "</h4></td><td>" + item.name + "</td><td>" + item.createdDate + "</td><td>" + item.createdBy + "</td></tr>";
                     }  
                     display("#pullrequests-body", rows);
                 });
