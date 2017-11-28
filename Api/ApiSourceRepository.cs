@@ -41,8 +41,16 @@ namespace ApiPinger
                     "http://zen-qa-api-01.ukwest.cloudapp.azure.com:5007/swagger"),
 
                 New("Underwriting Service", 18, 19, 
-                    "http://zen-int-api-01.ukwest.cloudapp.azure.com:5007/swagger", 
-                    "http://zen-qa-api-01.ukwest.cloudapp.azure.com:5007/swagger")
+                    "http://zen-int-api-01.ukwest.cloudapp.azure.com:5010/swagger", 
+                    "http://zen-qa-api-01.ukwest.cloudapp.azure.com:5010/swagger"),
+
+                New("Document Signing Service", 20, 22, 
+                    "http://zen-int-api-01.ukwest.cloudapp.azure.com:5019/swagger", 
+                    "http://zen-qa-api-01.ukwest.cloudapp.azure.com:5019/swagger"),
+
+                //New("Internal Website", 23, 19, 
+                //    "http://zen-int-api-01.ukwest.cloudapp.azure.com:5007/swagger", 
+                //    "http://zen-qa-api-01.ukwest.cloudapp.azure.com:5007/swagger")
         
             };
         }
