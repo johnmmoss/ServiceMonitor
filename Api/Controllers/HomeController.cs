@@ -82,10 +82,27 @@ namespace ApiPinger.Controllers
                 Name = x.title,
                 RepositoryName = x.repository.name,
                 CreatedBy = x.createdBy.displayName,
-                CreatedDate = x.creationDate.ToString("dddd dd - HH:mm")
+                CreatedDate = x.creationDate.ToString("dddd dd - HH:mm"),
+                ZenithDevCodeReview = x.reviewers.Where(z => z.displayName == @"[project-zen]\ZenithCodeReviewers").Select(y => new ReviewersModel() { Status = ConvertToStatus(y.vote), Description = y.displayName }).First(),
+                ZenithDevReview = x.reviewers.Where(z => z.displayName == @"[project-zen]\ZenithDev").Select(y => new ReviewersModel() { Status = ConvertToStatus(y.vote), Description = y.displayName }).First()
             }));
         }
-
+        private string ConvertToStatus(int vote)
+        {
+            switch (vote)
+            {
+                case -10:
+                    return "Rejected";
+                case -5:
+                    return "Waiting for author";
+                case 5:
+                    return "Approved with suggestions";
+                case 10:
+                    return "Approved";
+                default: // 0
+                    return "No Response";
+            }
+        }
         private async Task Load(ConcurrentBag<SourceItemModel> collection, ApiSource apiSource)
         {
             try{

@@ -89,6 +89,7 @@
                         <th>Name</th>
                         <th>Created</th>
                         <th>By</th>
+                        <th>Progress</th>
                     </tr>
                 </thead>
                 <tbody id="pullrequests-body">
@@ -109,7 +110,13 @@
                 var rows = "";
                     for(var i=0; i < items.length; i++) {
                         var item = items[i];
-                        rows+= "<tr><td><h4>" + item.repositoryName + "</h4></td><td>" + item.name + "</td><td>" + item.createdDate + "</td><td>" + item.createdBy + "</td></tr>";
+                        rows+= "<tr><td><h4>" + item.repositoryName + "</h4></td><td>" + item.name + "</td><td>" + item.createdDate + "</td><td>" + item.createdBy + "</td>";
+                        rows += "<td style=\"text-align:right\; font-size:10px;\">";
+                        rows += "ZenithDev " + getPullRequestIcon(item.zenithDevReview.status);
+                        rows += "<br>"
+                        rows += "ZenithDevCode " + getPullRequestIcon(item.zenithDevCodeReview.status);
+                        rows += "</td>";
+                        rows += "</tr>";
                     }  
                     display("#pullrequests-body", rows);
                 });
@@ -130,12 +137,12 @@
                         row += build.result === "succeeded" ? validtd(build.number) : invalidtd(build.number);  
                         
                         if (item.releaseIntegration != null) {
-                            row += getRow(item.releaseIntegration.status,item.releaseIntegration.name);
+                            row += getReleaseRow(item.releaseIntegration.status,item.releaseIntegration.name);
                         } else {
                             row += "<td>&nbsp;</td>";
                         }
                         if (item.releaseQa != null) {
-                            row += getRow(item.releaseQa.status, item.releaseQa.name);
+                            row += getReleaseRow(item.releaseQa.status, item.releaseQa.name);
                         } else {
                             row += "<td>&nbsp;</td>";
                         }
@@ -165,7 +172,22 @@
             $(id).append(data);
             $(id).fadeIn();
         }
-        function getRow(status, name) {
+
+        function getPullRequestIcon(status) {
+            console.log("Reviwer Status: " + status);
+            if (status === "Approved" || status === "Approved with suggestions") {
+                return smallGreenTick();
+            } else if (status == "Rejected") {
+                return smallRedNoEntry();
+            } else if (status == "No Response") {
+                return smallRedCross();
+            } else if (status === "Waiting for author") {
+                return smallYellowCross();
+            }
+            return "n/a";
+
+        }
+        function getReleaseRow(status, name) {
 
             console.log(status) ;
             if( status === "succeeded") {
@@ -199,13 +221,27 @@
             return td1 + label + td2;
         }
 
-
         function tick() {
             return "<td class=\"monitor-cell\"> <h4> <span class=\"label label-success label-large\"> &nbsp; <span class=\"glyphicon glyphicon-ok\" aria-hidden=\"true\"></span> &nbsp; </span> </h4> </td>";
         }
 
         function cross() {
             return "<td class=\"monitor-cell\"> <h4> <span class=\"label label-danger label-large\"> &nbsp; <span class=\"glyphicon glyphicon-remove\" aria-hidden=\"true\"></span> &nbsp; </span> </h4> </td>";
+        }
+    
+        function smallYellowCross() {
+            return "<span class=\"glyphicon glyphicon-remove\" style=\"color: orange;\" aria-hidden=\"true\"></span>";
+        }
+        function smallRedNoEntry() {
+            return "<span class=\"glyphicon glyphicon-minus-sign\" style=\"color: red;\" aria-hidden=\"true\"></span>";
+        }
+
+        function smallRedCross() {
+            return "<span class=\"glyphicon glyphicon-ok\" style=\"color: green;\" aria-hidden=\"true\"></span>";
+        }
+
+        function smallGreenTick() {
+            return "<span class=\"glyphicon glyphicon-remove\" style=\"color: red;\" aria-hidden=\"true\"></span>";
         }
 
         var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]; 
