@@ -4,6 +4,8 @@
 }
 
 <style>
+
+    h2, h3, h4, td, p { color:white;}
     .navbar { background-color: #0078d7 }
     .navbar-brand { color: #fff}
     th { text-align:center; }
@@ -51,7 +53,12 @@
         </div>
         <div class="row">
             <div class="col">
-                <h2>Release Status</h2>
+                <div style="width:100%">
+                    <div style="float:right; width:20%"><img align="right" height="100" width="60" style="margin-bottom:0px; z-index:5;" src="~/images/father-xmas.jpg" /></div>
+                    <div style="float:right; width:80%"><h2>Release Status</h2></div>
+                    <div style="clear:both;"></div>
+                </div>
+                <br />
             <table  id="main" class="table">
                 <thead>
                 <tr class="header">
@@ -110,6 +117,7 @@
                 var rows = "";
                     for(var i=0; i < items.length; i++) {
                         var item = items[i];
+                        console.log(item.repositoryName + " -> " + item.zenithDevCodeReview.status + ":" + item.zenithDevReview.status);
                         rows+= "<tr><td><h4>" + item.repositoryName + "</h4></td><td>" + item.name + "</td><td>" + item.createdDate + "</td><td>" + item.createdBy + "</td>";
                         rows += "<td style=\"text-align:right\; font-size:10px;\">";
                         rows += "ZenithDev " + getPullRequestIcon(item.zenithDevReview.status);
@@ -174,7 +182,7 @@
         }
 
         function getPullRequestIcon(status) {
-            console.log("Reviwer Status: " + status);
+            //console.log("Reviwer Status: " + status);
             if (status === "Approved" || status === "Approved with suggestions") {
                 return smallGreenTick();
             } else if (status == "Rejected") {
@@ -189,7 +197,7 @@
         }
         function getReleaseRow(status, name) {
 
-            console.log(status) ;
+            //console.log(status) ;
             if( status === "succeeded") {
                 return validtd(name);
             } else if (status === "rejected") {
@@ -237,11 +245,11 @@
         }
 
         function smallRedCross() {
-            return "<span class=\"glyphicon glyphicon-ok\" style=\"color: green;\" aria-hidden=\"true\"></span>";
+            return "<span class=\"glyphicon glyphicon-remove\" style=\"color: red;\" aria-hidden=\"true\"></span>";
         }
 
         function smallGreenTick() {
-            return "<span class=\"glyphicon glyphicon-remove\" style=\"color: red;\" aria-hidden=\"true\"></span>";
+            return "<span class=\"glyphicon glyphicon-ok\" style=\"color: green;\" aria-hidden=\"true\"></span>";
         }
 
         var days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]; 

@@ -77,6 +77,19 @@ namespace ApiPinger.Controllers
                     .OrderBy(x => x.repository.name).ThenBy(x => x.creationDate)
                     .ToList();
 
+            foreach(var p in zenithPullRequests)
+            {
+                var name = p.repository.name;
+                foreach(var r in p.reviewers)
+                {
+                    var rName = r.displayName;
+                    var vote = r.vote;
+                }
+                var zenithDevReview = p.reviewers.Where(z => z.displayName == @"[project-zen]\ZenithDev").Select(y => new ReviewersModel() { Status = ConvertToStatus(y.vote), Description = y.displayName }).ToList();
+                var zenithDevReview1 = p.reviewers.Where(z => z.displayName == @"[project-zen]\ZenithDev").Select(y => new ReviewersModel() { Status = ConvertToStatus(y.vote), Description = y.displayName }).ToList();
+
+                var zenithDevCodeReview = p.reviewers.Where(z => z.displayName == @"[project-zen]\ZenithCodeReviewers").Select(y => new ReviewersModel() { Status = ConvertToStatus(y.vote), Description = y.displayName }).First();
+            }
             return Json(zenithPullRequests.Select(x=> new PullRequestModel()
             {
                 Name = x.title,
