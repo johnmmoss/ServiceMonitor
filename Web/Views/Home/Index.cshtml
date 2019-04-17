@@ -6,7 +6,6 @@
 <style>
 
     h4 a { color:white;}
-    h2, h3, h4, td, p { color:white;}
     .navbar { background-color: #0078d7 }
     .navbar-brand { color: #fff}
     th { text-align:center; }
@@ -41,11 +40,9 @@
     <nav class="navbar  navbar-fixed-top">
         <div class="container">
             <div class="navbar-header">
-            <a class="navbar-brand" href="#">TFS Monitor &nbsp; :: &nbsp; Zenith Retail Middleware &nbsp; :: &nbsp; @Model.PageTitle</a>
+            <a class="navbar-brand" href="#">Azure Devops Monitor &nbsp; ::  &nbsp; @Model.PageTitle</a>
         </div>
-
         </div><!--/.nav-collapse -->
-      </div>
     </nav>
 
     <div class="container">
@@ -55,9 +52,7 @@
         <div class="row">
             <div class="col">
                 <div style="width:100%">
-                    <div style="float:right; width:20%"></div>
-                    <div style="float:right; width:80%"><h2>Release Status</h2></div>
-                    <div style="clear:both;"></div>
+                    <h2>Pipeline Status</h2>
                 </div>
                 <br />
             <table  id="main" class="table">
@@ -79,7 +74,7 @@
             </thead>
             <tbody id="monitor-body">
                 <tr>
-                    <td colspan="7"></td>
+                    <td colspan="6"></td>
                 </tr>
             </tbody>
             </table>
@@ -88,7 +83,7 @@
             </div>
             </div>
         </div>
-        <div class="row">
+        <div class="row" style="display:none;">
             <h2>Pull Requests</h2>
                 <table  id="pullRequests" class="table">
                     <thead>
@@ -110,6 +105,70 @@
     </div>
 </div>
 <script>
+
+    $(document).ready(function () {
+        $("#refreshed-container").hide();
+        $("#monitor-body").hide();
+        $("#pullrequests-body").hide();
+        load();
+        setInterval(load, 30000);
+        setInterval(loadPullRequests, 60000)
+    }); 
+
+       function load() {
+           var url = "@(Model.HostUrl)/home/sources";
+            $.get(url)
+                .done(function(data) {
+                    
+                    var content = "";
+                    content = toTitleRow("Radix");
+                    content += toDataRow(data.items);
+
+                    display("#monitor-body", content);
+
+                    $(".loader").hide();
+                    setLastRefreshed();
+                });
+        } 
+      
+        function display(id, data) {
+            $(id).fadeOut();
+            $(id).empty();
+            $(id).append(data);
+            $(id).fadeIn();
+        }
+
+    function toTitleRow(title) {
+        
+        return "<tr><td colspan=\"5\"><h3>"+title+"</h3></td></tr>";
+    }
+
+    function toDataRow(items) {
+        var rows = "";
+        for (var i = 0; i < items.length; i++) {
+
+            var row = "<tr><td><h4>" + items[i].name + "</h4></td>";
+            var item = items[i];
+            var build = item.build[0];
+
+            row += build.result === "succeeded" ? validtd(build.number) : invalidtd(build.number);
+
+            if (item.releaseIntegration != null) {
+                row += getReleaseRow(item.releaseIntegration.status, item.releaseIntegration.name);
+            } else {
+                row += "<td>&nbsp;</td>";
+            }
+            if (item.releaseQa != null) {
+                row += getReleaseRow(item.releaseQa.status, item.releaseQa.name);
+            } else {
+                row += "<td>&nbsp;</td>";
+            }
+            row += item.integrationUp ? tick() : cross();
+            row += item.qaUp ? tick() : cross();
+            rows += row;
+        }
+        return rows;
+    }
      function loadPullRequests() {
 
         var url = "@(Model.HostUrl)/home/pullrequests";
@@ -117,6 +176,7 @@
             .done(function(items) {
                 var rows = "";
                     for(var i=0; i < items.length; i++) {
+                        
                         var item = items[i];
                         console.log(item.repositoryName + " -> " + item.zenithDevCodeReview.status + ":" + item.zenithDevReview.status);
                         rows+= "<tr><td><h4><a target=\"_blank\" href=\"" + item.url + "\">" + item.repositoryName + "</a></h4></td><td>" + item.name + "</td><td>" + item.createdDate + "</td><td>" + item.createdBy + "</td>";
@@ -129,58 +189,7 @@
                     }  
                     display("#pullrequests-body", rows);
                 });
-      } 
-
-       function load() {
-           var url = "@(Model.HostUrl)/home/sources";
-            $.get(url)
-                .done(function(data) {
-
-                    var rows = "";
-                    for(var i=0; i < data.items.length; i++) {
-
-                        var row = "<tr><td><h4>" + data.items[i].name + "</h4></td>";
-                        var item = data.items[i];
-                        var build = item.build[0];
-
-                        row += build.result === "succeeded" ? validtd(build.number) : invalidtd(build.number);  
-                        
-                        if (item.releaseIntegration != null) {
-                            row += getReleaseRow(item.releaseIntegration.status,item.releaseIntegration.name);
-                        } else {
-                            row += "<td>&nbsp;</td>";
-                        }
-                        if (item.releaseQa != null) {
-                            row += getReleaseRow(item.releaseQa.status, item.releaseQa.name);
-                        } else {
-                            row += "<td>&nbsp;</td>";
-                        }
-                        row += item.integrationUp ? tick() : cross();
-                        row += item.qaUp ? tick() : cross();
-                        rows += row;
-                    }
-                    display("#monitor-body", rows);
-                    $(".loader").hide();
-                    setLastRefreshed();
-                });
-        } 
-
-       $(document).ready(function() {
-           $("#refreshed-container").hide();
-           $("#monitor-body").hide();
-           $("#pullrequests-body").hide();
-           load();  
-           loadPullRequests();
-           setInterval(load, 30000);
-           setInterval(loadPullRequests, 60000)
-        }); 
-
-        function display(id, data) {
-            $(id).fadeOut();
-            $(id).empty();
-            $(id).append(data);
-            $(id).fadeIn();
-        }
+    } 
 
         function getPullRequestIcon(status) {
             //console.log("Reviwer Status: " + status);

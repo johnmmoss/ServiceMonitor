@@ -28,11 +28,11 @@ namespace ApiPinger
             services.Configure<TfsClientOptions>(options =>
             {
                 options.AccessToken = "";
-                options.Instance = "";
-                options.Project = "";
+                options.Instance = "lgssitdev";
+                options.Project = "Radix";
             });
             services.AddMvc();
-            services.AddSingleton(new ApiSourceRepository());
+            services.AddSingleton(new TfsProjectsRepository());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

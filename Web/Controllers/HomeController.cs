@@ -18,18 +18,21 @@ namespace ServiceMonitor.Web.Controllers
 {
     public class HomeController : Controller
     {
+        const string ENVIRONMENT_ONE_NAME = "Dev";
+        const string ENVIRONMENT_TWO_NAME = "UAT";
+
         private TfsRepository _tfsRepository;
         private TfsClientOptions _tfsOptions;
-        private ApiSourceRepository _apiSourceRepository;
+        private TfsProjectsRepository _tfsProjectsRepository;
         private ILogger _logger;
 
         public HomeController(
-            ApiSourceRepository apiSourceRepository,
+            TfsProjectsRepository apiSourceRepository,
             IOptions<TfsClientOptions> tfsOptions,
             ILogger<HomeController> logger)
         {
             _tfsOptions = tfsOptions.Value;
-            _apiSourceRepository = apiSourceRepository;
+            _tfsProjectsRepository = apiSourceRepository;
             _tfsRepository = new TfsRepository(_tfsOptions);
             _logger = logger;
         }
@@ -51,7 +54,7 @@ namespace ServiceMonitor.Web.Controllers
             _logger.LogInformation("Loading sources...");
 
             var collection = new ConcurrentBag<SourceItemModel>(); 
-            var apiSources = _apiSourceRepository.GetAll() as List<ApiSource>;
+            var apiSources = _tfsProjectsRepository.GetAll() as List<PipelineInfo>;
 
             Task.WaitAll(apiSources.Select((item) => Load(collection, item)).ToArray());
                
@@ -101,7 +104,7 @@ namespace ServiceMonitor.Web.Controllers
                     return "No Response";
             }
         }
-        private async Task Load(ConcurrentBag<SourceItemModel> collection, ApiSource apiSource)
+        private async Task Load(ConcurrentBag<SourceItemModel> collection, PipelineInfo apiSource)
         {
             try{
                     _logger.LogInformation($"Loading {apiSource.Name}...");
@@ -111,8 +114,8 @@ namespace ServiceMonitor.Web.Controllers
                     modelItem.QaUrl = apiSource.QaUrl;
                     modelItem.IntegrationUrl = apiSource.IntegrationUrl;
                     modelItem.Build = await GetBuildModel(apiSource.BuildDefinitionId);
-                    modelItem.ReleaseIntegration = await GetIntegrationReleaseModel(apiSource.ReleaseDefinitionId);
-                    modelItem.ReleaseQa = await GetQaReleaseModel(apiSource.ReleaseDefinitionId);
+                    modelItem.ReleaseIntegration = await GetEnvironmentOneReleaseModel(apiSource.ReleaseDefinitionId);
+                    modelItem.ReleaseQa = await GetEnvironmentTwoReleaseModel(apiSource.ReleaseDefinitionId);
                     modelItem.IntegrationUp = await PingAsync(apiSource.IntegrationUrl);
                     modelItem.QaUp = await PingAsync(apiSource.QaUrl);
 
@@ -128,7 +131,7 @@ namespace ServiceMonitor.Web.Controllers
         [HttpGet]
         public async Task<bool> PingIntegration(int id)
         {
-            var apiSource = _apiSourceRepository.Get(id);
+            var apiSource = _tfsProjectsRepository.Get(id);
 
             using (var httpClient = new HttpClient())
             {
@@ -139,7 +142,7 @@ namespace ServiceMonitor.Web.Controllers
         [HttpGet]
         public async Task<bool> PingQa(int id)
         {
-            var apiSource = _apiSourceRepository.Get(id);
+            var apiSource = _tfsProjectsRepository.Get(id);
 
             return await PingAsync(apiSource.QaUrl);
         }
@@ -165,38 +168,40 @@ namespace ServiceMonitor.Web.Controllers
             }).OrderByDescending(x => x.Finished).ToList();
         }
 
-        private async Task<ReleaseModel> GetIntegrationReleaseModel(int definitionId)
+        private async Task<ReleaseModel> GetEnvironmentOneReleaseModel(int definitionId)
         {
             var releases = await _tfsRepository.GetTfsReleaseAsync(definitionId);
             var current = releases.FirstOrDefault();
 
             if(current != null && current.environments != null)
             {
-                var integration = current.environments.Find(x => x.name.ToLower() == "integration" || x.name.ToLower() == "intergration" && x.status.ToLower() != "notstarted");
-                if (integration != null)
+                var environment = current.environments.Find(x => x.name.ToLower() == ENVIRONMENT_ONE_NAME.ToLower() && x.status.ToLower() == "succeeded");
+                if (environment != null)
                 {
-                    var integrationModel = new ReleaseModel();
-                    integrationModel.Status= integration.status;
-                    integrationModel.Name = current.name.Contains("-") ? current.name.Split('-')[1] : current.name;
-                    return integrationModel;
+                    var environmentOne = new ReleaseModel();
+                    environmentOne.Status= environment.status;
+                    environmentOne.Name = current.name.Contains("-") ? current.name.Split('-')[1] : current.name;
+                    return environmentOne;
                 }
             }
             return null;
         }
 
-        private async Task<ReleaseModel> GetQaReleaseModel(int definitionId)
+        // succeeded, notStarted, inProgress
+        private async Task<ReleaseModel> GetEnvironmentTwoReleaseModel(int definitionId)
         {
-
             var releases = await _tfsRepository.GetTfsReleaseAsync(definitionId);
-            var qa = releases.FirstOrDefault( x=> x.environments.Where(y => y.name.ToLower() == "qa" && y.status.ToLower() != "notstarted").Any() );
+            var environmentTwo = releases.FirstOrDefault( x=> x.environments.
+                Where(y => y.name.ToLower() == ENVIRONMENT_TWO_NAME.ToLower() && y.status.ToLower() == "succeeded")
+                .Any());
 
-            if (qa != null)
+            if (environmentTwo != null)
             {
-                var qaModel = new ReleaseModel();
-                var qaEnvironment = qa.environments.First(x => x.name.ToLower() == "qa");
-                qaModel.Status= qaEnvironment.status;
-                qaModel.Name = qa.name.Contains("-") ? qa.name.Split('-')[1] : qa.name;
-                return qaModel;
+                var environmentOneModel = new ReleaseModel();
+                var qaEnvironment = environmentTwo.environments.First(x => x.name.ToLower() == ENVIRONMENT_TWO_NAME.ToLower());
+                environmentOneModel.Status= qaEnvironment.status;
+                environmentOneModel.Name = environmentTwo.name.Contains("-") ? environmentTwo.name.Split('-')[1] : environmentTwo.name;
+                return environmentOneModel;
             }
 
             return null;
