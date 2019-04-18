@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace ServiceMonitor.Web.Models
 {
-    public class SourceItemModel
+    public class PipelineInfoModel
     {
         public string Name { get; set; }
         public bool QaUp { get; set; }

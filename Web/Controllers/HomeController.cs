@@ -13,6 +13,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Tfs.Client;
 using TfsClient;
+using Web.Models;
 
 namespace ServiceMonitor.Web.Controllers
 {
@@ -53,19 +54,24 @@ namespace ServiceMonitor.Web.Controllers
         {
             _logger.LogInformation("Loading sources...");
 
-            var collection = new ConcurrentBag<SourceItemModel>(); 
             var tfsProjects = _tfsProjectsRepository.GetAll();
+            
+            var collection = new ConcurrentBag<PipelineInfoModel>(); 
 
             Task.WaitAll(tfsProjects.Select((item) => Load(collection, item)).ToArray());
-               
-            var items = new List<SourceItemModel>();
-            items = collection.ToList();
-            items = items.OrderBy(x => x.Name).ToList();
 
-            return Json(new SourceModel()
-            {
-                Items = items
-            });
+            var pipelineInfosModel = new List<PipelineInfoModel>();
+            pipelineInfosModel = collection.ToList();
+            pipelineInfosModel = pipelineInfosModel.OrderBy(x => x.Name).ToList();
+
+            var tfsProjectModel = new TfsProjectModel();
+            tfsProjectModel.Name = tfsProjects[0].Name;
+            tfsProjectModel.PipelineInfoModels = pipelineInfosModel;
+
+            var tfsProjectsModel = new TfsProjectsModel();
+            tfsProjectsModel.TfsProjects = new List<TfsProjectModel>() { tfsProjectModel };
+
+            return Json(tfsProjectsModel);
         }
 
         public async Task<IActionResult> PullRequests()
@@ -104,12 +110,14 @@ namespace ServiceMonitor.Web.Controllers
                     return "No Response";
             }
         }
-        private async Task Load(ConcurrentBag<SourceItemModel> collection, TfsProject tfsProject)
+        private async Task Load(ConcurrentBag<PipelineInfoModel> collection, TfsProject tfsProject)
         {
-            try{
+            try
+            {
+
                 foreach (var pipelineInfo in tfsProject.PipelineInfos)
                 {
-                    var modelItem = new SourceItemModel();
+                    var modelItem = new PipelineInfoModel();
 
                     modelItem.Name = pipelineInfo.Name;
                     modelItem.QaUrl = pipelineInfo.QaUrl;

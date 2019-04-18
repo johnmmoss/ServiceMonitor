@@ -4,7 +4,7 @@ namespace ServiceMonitor.Web.Models
 {
     public class SourceModel
     {
-        public IList<SourceItemModel> Items { get; set; }
+        public IList<PipelineInfoModel> Items { get; set; }
         public IList<BuildModel> Builds { get; set; }
     }
 }

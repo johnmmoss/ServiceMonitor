@@ -118,11 +118,19 @@
            var url = "@(Model.HostUrl)/home/sources";
             $.get(url)
                 .done(function(data) {
-                    
+
                     console.log(data);
+                    
                     var content = "";
-                    content = toTitleRow("Radix");
-                    content += toDataRow(data.items);
+                    for (var i = 0; i < data.tfsProjects.length; i++) {
+
+                        var tfsProject = data.tfsProjects[i];
+
+                        console.log(tfsProject);
+
+                        content = toTitleRow(tfsProject.name);
+                        content += toDataRow(tfsProject.pipelineInfoModels);
+                    }
 
                     display("#monitor-body", content);
 
