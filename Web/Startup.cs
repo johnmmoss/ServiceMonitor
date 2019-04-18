@@ -29,7 +29,6 @@ namespace ApiPinger
             {
                 options.AccessToken = "";
                 options.Instance = "lgssitdev";
-                options.Project = "Radix";
             });
             services.AddMvc();
             services.AddSingleton(new TfsProjectsRepository());

@@ -6,11 +6,11 @@ namespace ServiceMonitor.Data
 {
     public class TfsProjectsRepository
     {
-        private List<PipelineInfo> _projects;
+        private List<TfsProject> _projects;
 
         public TfsProjectsRepository()
         {
-            _projects = new List<PipelineInfo>()
+            var pipelineInfos = new List<PipelineInfo>()
             {
                 New("Radix.Identity.Api", 24, 7,
                     "http://lgssvm10:7002/swagger/ui/index",
@@ -28,16 +28,18 @@ namespace ServiceMonitor.Data
                     "http://lgssvm10:7009/swagger/ui/index",
                     "http://lgssvm11:8009/swagger/ui/index")
             };
+
+            _projects = new List<TfsProject>();
+            _projects.Add(new TfsProject()
+            {
+                Name = "Radix",
+                PipelineInfos = pipelineInfos
+            });
         }
         
-        public IList<PipelineInfo> GetAll()
+        public IList<TfsProject> GetAll()
         {
             return _projects;
-        }
-
-        public PipelineInfo Get(int id)
-        {
-            return _projects.First(x => x.Id == id);
         }
 
         private PipelineInfo New(string name, int buildDefinitionId, 

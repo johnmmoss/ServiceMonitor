@@ -1,36 +1,40 @@
+using System;
+
 namespace Tfs.Client
 {
     public class TfsUrl
     {
-        private string buildTemplate = "https://{0}.visualstudio.com/DefaultCollection/{1}/_apis/build/builds?api-version=2.0";
-        private string releaseTemplate = "https://{0}.vsrm.visualstudio.com/DefaultCollection/{1}/_apis/release/releases?$expand=environments&definitionId=";
-        private string pullRequestsTemplate = "https://{0}.visualstudio.com/DefaultCollection/{1}/_apis/git/pullRequests?status=active";
-        private string pullRequestTemplate = "https://{0}.visualstudio.com/{1}/ZenithDev/_git/{2}/pullrequest/{3}?view=discussion"; // TODO Move ZenithDev to options
+        private string _buildTemplate = "https://{0}.visualstudio.com/DefaultCollection/{1}/_apis/build/builds?api-version=2.0";
+        private string _releaseTemplate = "https://{0}.vsrm.visualstudio.com/DefaultCollection/{1}/_apis/release/releases?$expand=environments&definitionId=";
+        private string _pullRequestsTemplate = "https://{0}.visualstudio.com/DefaultCollection/{1}/_apis/git/pullRequests?status=active";
+        private string _pullRequestTemplate = "https://{0}.visualstudio.com/{1}/ZenithDev/_git/{2}/pullrequest/{3}?view=discussion"; // TODO Move ZenithDev to options
 
-        public string Instance { get; private set; }
-        public string Project { get; private set; }
-        public string ReleaseApi { get; private set; }
-        public string BuildApi { get; private set; }
+        private string Instance { get; set; }
+
         public string PullRequestsApi { get; private set; }
 
-        public TfsUrl(string instance, string project)
+        public TfsUrl(string instance)
         {
            Instance = instance;
-           Project = project; 
 
-           BuildApi = string.Format(buildTemplate, instance, project);
-           ReleaseApi = string.Format(releaseTemplate, instance, project);
-           PullRequestsApi = string.Format(pullRequestsTemplate, instance, project);
+           //PullRequestsApi = string.Format(_pullRequestsTemplate, instance, project);
         }
 
-        public string GetReleaseUrl(int definitionId)
+        public string GetTfsBuildApi(string projectName)
         {
-            return $"{ReleaseApi}&definitions={definitionId}";
+           return string.Format(_buildTemplate, Instance, projectName);
+        }
+
+        public string GetReleaseUrl(string projectName, int definitionId)
+        {
+            return string.Format(_releaseTemplate, Instance, projectName) + definitionId; 
         }
 
         public string BuildPullRequestUrl(string repoName, int pullRequestId)
         {
-            return string.Format(pullRequestTemplate, Instance, Project, repoName, pullRequestId);
+            return string.Empty;
+            // TODO pull request functionality currently "off"
+            //return string.Format(_pullRequestTemplate, Instance, Project, repoName, pullRequestId);
         }
     }
 }

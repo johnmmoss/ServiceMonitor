@@ -103,7 +103,6 @@
             Last refreshed - <b><span id="refreshed"></span></b>
         </div>
     </div>
-</div>
 <script>
 
     $(document).ready(function () {
@@ -112,7 +111,7 @@
         $("#pullrequests-body").hide();
         load();
         setInterval(load, 30000);
-        setInterval(loadPullRequests, 60000)
+        //setInterval(loadPullRequests, 60000)
     }); 
 
        function load() {
@@ -120,6 +119,7 @@
             $.get(url)
                 .done(function(data) {
                     
+                    console.log(data);
                     var content = "";
                     content = toTitleRow("Radix");
                     content += toDataRow(data.items);
@@ -205,6 +205,7 @@
             return "n/a";
 
         }
+
         function getReleaseRow(status, name) {
 
             //console.log(status) ;

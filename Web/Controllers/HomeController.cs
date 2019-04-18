@@ -44,7 +44,7 @@ namespace ServiceMonitor.Web.Controllers
             return View(new IndexModel() 
             { 
                 HostUrl = url,
-                PageTitle = $"{_tfsOptions.Instance} / {_tfsOptions.Project}"
+                PageTitle = $"{_tfsOptions.Instance}"
 
             });
         }
@@ -54,9 +54,9 @@ namespace ServiceMonitor.Web.Controllers
             _logger.LogInformation("Loading sources...");
 
             var collection = new ConcurrentBag<SourceItemModel>(); 
-            var apiSources = _tfsProjectsRepository.GetAll() as List<PipelineInfo>;
+            var tfsProjects = _tfsProjectsRepository.GetAll();
 
-            Task.WaitAll(apiSources.Select((item) => Load(collection, item)).ToArray());
+            Task.WaitAll(tfsProjects.Select((item) => Load(collection, item)).ToArray());
                
             var items = new List<SourceItemModel>();
             items = collection.ToList();
@@ -76,7 +76,7 @@ namespace ServiceMonitor.Web.Controllers
                     .OrderBy(x => x.repository.name).ThenBy(x => x.creationDate)
                     .ToList();
 
-            var tfsUrl = new TfsUrl(_tfsOptions.Instance, _tfsOptions.Project);
+            var tfsUrl = new TfsUrl(_tfsOptions.Instance);
             return Json(zenithPullRequests.Select(x=> new PullRequestModel()
             {
                 Name = x.title,
@@ -104,23 +104,25 @@ namespace ServiceMonitor.Web.Controllers
                     return "No Response";
             }
         }
-        private async Task Load(ConcurrentBag<SourceItemModel> collection, PipelineInfo apiSource)
+        private async Task Load(ConcurrentBag<SourceItemModel> collection, TfsProject tfsProject)
         {
             try{
-                    _logger.LogInformation($"Loading {apiSource.Name}...");
+                foreach (var pipelineInfo in tfsProject.PipelineInfos)
+                {
                     var modelItem = new SourceItemModel();
 
-                    modelItem.Name = apiSource.Name;
-                    modelItem.QaUrl = apiSource.QaUrl;
-                    modelItem.IntegrationUrl = apiSource.IntegrationUrl;
-                    modelItem.Build = await GetBuildModel(apiSource.BuildDefinitionId);
-                    modelItem.ReleaseIntegration = await GetEnvironmentOneReleaseModel(apiSource.ReleaseDefinitionId);
-                    modelItem.ReleaseQa = await GetEnvironmentTwoReleaseModel(apiSource.ReleaseDefinitionId);
-                    modelItem.IntegrationUp = await PingAsync(apiSource.IntegrationUrl);
-                    modelItem.QaUp = await PingAsync(apiSource.QaUrl);
+                    modelItem.Name = pipelineInfo.Name;
+                    modelItem.QaUrl = pipelineInfo.QaUrl;
+                    modelItem.IntegrationUrl = pipelineInfo.IntegrationUrl;
+                    modelItem.Build = await GetBuildModel(tfsProject.Name, pipelineInfo.BuildDefinitionId);
+                    modelItem.ReleaseIntegration = await GetEnvironmentOneReleaseModel(tfsProject.Name, pipelineInfo.ReleaseDefinitionId);
+                    modelItem.ReleaseQa = await GetEnvironmentTwoReleaseModel(tfsProject.Name,pipelineInfo.ReleaseDefinitionId);
+                    modelItem.IntegrationUp = await PingAsync(pipelineInfo.IntegrationUrl);
+                    modelItem.QaUp = await PingAsync(pipelineInfo.QaUrl);
 
-                    _logger.LogInformation($"Loading {apiSource.Name} complete!");
+                    _logger.LogInformation($"Loading {pipelineInfo.Name} complete!");
                     collection.Add(modelItem);
+                }
             } 
             catch (Exception ex)
             {
@@ -128,36 +130,9 @@ namespace ServiceMonitor.Web.Controllers
             }
         }
 
-        [HttpGet]
-        public async Task<bool> PingIntegration(int id)
+      private async Task<IList<BuildModel>> GetBuildModel(string projectName, int definitionId)
         {
-            var apiSource = _tfsProjectsRepository.Get(id);
-
-            using (var httpClient = new HttpClient())
-            {
-                return await PingAsync(apiSource.IntegrationUrl);
-            }
-        }
-
-        [HttpGet]
-        public async Task<bool> PingQa(int id)
-        {
-            var apiSource = _tfsProjectsRepository.Get(id);
-
-            return await PingAsync(apiSource.QaUrl);
-        }
-
-        [HttpGet]
-        public async Task<BuildModel> Build(int definitionId)
-        {
-            var builds = await GetBuildModel(definitionId);
-
-            return builds.First();
-        }
-
-        private async Task<IList<BuildModel>> GetBuildModel(int definitionId)
-        {
-            var builds = await _tfsRepository.GetTfsBuildsAsync(definitionId);
+            var builds = await _tfsRepository.GetTfsBuildsAsync(projectName, definitionId);
 
             return builds.Select(x => new BuildModel()
             {
@@ -168,9 +143,9 @@ namespace ServiceMonitor.Web.Controllers
             }).OrderByDescending(x => x.Finished).ToList();
         }
 
-        private async Task<ReleaseModel> GetEnvironmentOneReleaseModel(int definitionId)
+        private async Task<ReleaseModel> GetEnvironmentOneReleaseModel(string projectName, int definitionId)
         {
-            var releases = await _tfsRepository.GetTfsReleaseAsync(definitionId);
+            var releases = await _tfsRepository.GetTfsReleaseAsync(projectName, definitionId);
             var current = releases.FirstOrDefault();
 
             if(current != null && current.environments != null)
@@ -188,9 +163,9 @@ namespace ServiceMonitor.Web.Controllers
         }
 
         // succeeded, notStarted, inProgress
-        private async Task<ReleaseModel> GetEnvironmentTwoReleaseModel(int definitionId)
+        private async Task<ReleaseModel> GetEnvironmentTwoReleaseModel(string projectName, int definitionId)
         {
-            var releases = await _tfsRepository.GetTfsReleaseAsync(definitionId);
+            var releases = await _tfsRepository.GetTfsReleaseAsync(projectName, definitionId);
             var environmentTwo = releases.FirstOrDefault( x=> x.environments.
                 Where(y => y.name.ToLower() == ENVIRONMENT_TWO_NAME.ToLower() && y.status.ToLower() == "succeeded")
                 .Any());

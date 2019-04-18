@@ -19,19 +19,19 @@ namespace Tfs.Client
         public TfsRepository(TfsClientOptions _tfsClientOptions)
         {
             _accessToken = _tfsClientOptions.AccessToken;
-            _tfsUrl = new TfsUrl(_tfsClientOptions.Instance, _tfsClientOptions.Project);            
+            _tfsUrl = new TfsUrl(_tfsClientOptions.Instance);            
         }
 
-        public async Task<IList<TfsRelease>> GetTfsReleaseAsync(int defintionId)
+        public async Task<IList<TfsRelease>> GetTfsReleaseAsync(string projectName, int definitionId)
         {
-            var url = _tfsUrl.ReleaseApi + $"{defintionId}";
+            var url = _tfsUrl.GetReleaseUrl(projectName, definitionId);
             var dto = await Get<Tfs.ReleaseDto.RootObject>(url);
             return dto.value;
         }
 
-        public async Task<IList<TfsBuild>> GetTfsBuildsAsync(int defintionId)
+        public async Task<IList<TfsBuild>> GetTfsBuildsAsync(string projectName, int defintionId)
         {
-            var url = _tfsUrl.BuildApi + $"&definitions={defintionId}";
+            var url = _tfsUrl.GetTfsBuildApi(projectName) + $"&definitions={defintionId}";
             var dto = await Get<Tfs.BuildDto.RootObject>(url);
             return dto.value;
         }
