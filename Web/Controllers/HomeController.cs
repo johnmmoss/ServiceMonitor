@@ -46,30 +46,24 @@ namespace ServiceMonitor.Web.Controllers
             { 
                 HostUrl = url,
                 PageTitle = $"{_tfsOptions.Instance}"
-
             });
         }
 
-        public IActionResult Sources()
+        public async Task<IActionResult> Sources()
         {
-            _logger.LogInformation("Loading sources...");
+            _logger.LogInformation("Loading vsts projects...");
 
             var tfsProjects = _tfsProjectsRepository.GetAll();
-            
-            var collection = new ConcurrentBag<PipelineInfoModel>(); 
-
-            Task.WaitAll(tfsProjects.Select((item) => Load(collection, item)).ToArray());
-
-            var pipelineInfosModel = new List<PipelineInfoModel>();
-            pipelineInfosModel = collection.ToList();
-            pipelineInfosModel = pipelineInfosModel.OrderBy(x => x.Name).ToList();
-
-            var tfsProjectModel = new TfsProjectModel();
-            tfsProjectModel.Name = tfsProjects[0].Name;
-            tfsProjectModel.PipelineInfoModels = pipelineInfosModel;
-
             var tfsProjectsModel = new TfsProjectsModel();
-            tfsProjectsModel.TfsProjects = new List<TfsProjectModel>() { tfsProjectModel };
+            tfsProjectsModel.TfsProjects = new List<TfsProjectModel>();
+
+            foreach(var tfsProject in tfsProjects)
+            {
+                var tfsProjectModel = new TfsProjectModel();
+                tfsProjectModel.Name = tfsProject.Name;
+                tfsProjectModel.PipelineInfoModels = await LoadPipelineInfos(tfsProject);
+                tfsProjectsModel.TfsProjects.Add(tfsProjectModel);
+            }
 
             return Json(tfsProjectsModel);
         }
@@ -110,11 +104,12 @@ namespace ServiceMonitor.Web.Controllers
                     return "No Response";
             }
         }
-        private async Task Load(ConcurrentBag<PipelineInfoModel> collection, TfsProject tfsProject)
+
+        private async Task<List<PipelineInfoModel>> LoadPipelineInfos(TfsProject tfsProject)
         {
+            var pipelineInfoModels = new List<PipelineInfoModel>();
             try
             {
-
                 foreach (var pipelineInfo in tfsProject.PipelineInfos)
                 {
                     var modelItem = new PipelineInfoModel();
@@ -128,14 +123,14 @@ namespace ServiceMonitor.Web.Controllers
                     modelItem.IntegrationUp = await PingAsync(pipelineInfo.IntegrationUrl);
                     modelItem.QaUp = await PingAsync(pipelineInfo.QaUrl);
 
-                    _logger.LogInformation($"Loading {pipelineInfo.Name} complete!");
-                    collection.Add(modelItem);
+                    pipelineInfoModels.Add(modelItem);
                 }
             } 
             catch (Exception ex)
             {
                 _logger.LogError("1", ex);
             }
+            return pipelineInfoModels;
         }
 
       private async Task<IList<BuildModel>> GetBuildModel(string projectName, int definitionId)
@@ -158,7 +153,10 @@ namespace ServiceMonitor.Web.Controllers
 
             if(current != null && current.environments != null)
             {
-                var environment = current.environments.Find(x => x.name.ToLower() == ENVIRONMENT_ONE_NAME.ToLower() && x.status.ToLower() == "succeeded");
+                var environment = current.environments
+                    .Find(x => x.name.ToLower() == ENVIRONMENT_ONE_NAME.ToLower() 
+                            && x.status.ToLower() != "notstarted");
+
                 if (environment != null)
                 {
                     var environmentOne = new ReleaseModel();
@@ -174,17 +172,18 @@ namespace ServiceMonitor.Web.Controllers
         private async Task<ReleaseModel> GetEnvironmentTwoReleaseModel(string projectName, int definitionId)
         {
             var releases = await _tfsRepository.GetTfsReleaseAsync(projectName, definitionId);
-            var environmentTwo = releases.FirstOrDefault( x=> x.environments.
-                Where(y => y.name.ToLower() == ENVIRONMENT_TWO_NAME.ToLower() && y.status.ToLower() == "succeeded")
-                .Any());
+            var release = releases.FirstOrDefault( x=> x.environments.
+                                    Where(y => y.name.ToLower() == ENVIRONMENT_TWO_NAME.ToLower() 
+                                        && y.status.ToLower() != "notstarted")
+                                    .Any());
 
-            if (environmentTwo != null)
+            if (release != null)
             {
-                var environmentOneModel = new ReleaseModel();
-                var qaEnvironment = environmentTwo.environments.First(x => x.name.ToLower() == ENVIRONMENT_TWO_NAME.ToLower());
-                environmentOneModel.Status= qaEnvironment.status;
-                environmentOneModel.Name = environmentTwo.name.Contains("-") ? environmentTwo.name.Split('-')[1] : environmentTwo.name;
-                return environmentOneModel;
+                var releaseModel = new ReleaseModel();
+                var environment = release.environments.First(x => x.name.ToLower() == ENVIRONMENT_TWO_NAME.ToLower());
+                releaseModel.Status= environment.status;
+                releaseModel.Name = release.name.Contains("-") ? release.name.Split('-')[1] : release.name;
+                return releaseModel;
             }
 
             return null;

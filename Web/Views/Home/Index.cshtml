@@ -11,7 +11,7 @@
     th { text-align:center; }
     .monitor-cell {  width:15%; text-align:center; }
     .title { width:25%;}
-    h3 { margin:0px; padding:0px; margin-top:5px;}
+    h3 { margin:0px; padding:0px; margin-top:30px;}
     .loader {
         border: 16px solid #f3f3f3; /* Light grey */
         border-top: 16px solid #a0a0a0; /* Blue */
@@ -119,8 +119,6 @@
             $.get(url)
                 .done(function(data) {
 
-                    console.log(data);
-                    
                     var content = "";
                     for (var i = 0; i < data.tfsProjects.length; i++) {
 
@@ -128,7 +126,7 @@
 
                         console.log(tfsProject);
 
-                        content = toTitleRow(tfsProject.name);
+                        content += toTitleRow(tfsProject.name);
                         content += toDataRow(tfsProject.pipelineInfoModels);
                     }
 
