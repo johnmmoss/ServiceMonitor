@@ -27,7 +27,7 @@ namespace ApiPinger
             services.AddOptions();
             services.Configure<TfsClientOptions>(options =>
             {
-                options.AccessToken = "";
+                options.AccessToken = "VSTS-PAT-TOKEN";
                 options.Instance = "lgssitdev";
             });
             services.AddMvc();

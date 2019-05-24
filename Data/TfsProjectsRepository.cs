@@ -26,14 +26,15 @@ namespace ServiceMonitor.Data
                         "http://lgssvm11:8007/swagger/ui/index"),
 
                      New("Radix.FileStorage.Api", 13, 2,
-                        "http://lgssvm10:7007/swagger/ui/index",
-                        "http://lgssvm11:8007/swagger/ui/index"),
+                        "http://lgssvm10:7006/swagger/ui/index",
+                        "http://lgssvm11:8006/swagger/ui/index"),
 
                      New("Radix.LegacyWrapper.Api", 22, 6,
                         "http://lgssvm10:7009/swagger/ui/index",
                         "http://lgssvm11:8009/swagger/ui/index")
                 }
             });
+
             _projects.Add(new TfsProject()
             {
                 Name = "SmartrValuation",
@@ -46,8 +47,26 @@ namespace ServiceMonitor.Data
                     New("SmartrValuation.Portal.Api", 2, 1,
                         "http://lgssvm10:7000/login",
                         "http://lgssvm11:8000/login"),
-                }
 
+                   New("SmartRValuation.PropertyRules.Api", 9, 7,
+                        "http://lgssvm10:7000/login",
+                        "http://lgssvm11:8000/login"),
+                }
+            });
+
+            _projects.Add(new TfsProject()
+            {
+                Name = "SmartrFirmAdmin",
+                PipelineInfos = new List<PipelineInfo>()
+                {
+                    New("SmartRFirmAdmin.Api", 32, 3 ,
+                        "http://lgssvm10:7005/swagger/ui/index",
+                        "http://lgssvm11:8005/swagger/ui/index"),
+
+                    New("SmartRFirmAdmin.Web", 35, 4,
+                        "http://lgssvm10:7008/login",
+                        "http://lgssvm11:8008/login"),
+                }
             });
         }
         

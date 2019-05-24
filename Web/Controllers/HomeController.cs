@@ -112,38 +112,40 @@ namespace ServiceMonitor.Web.Controllers
             {
                 foreach (var pipelineInfo in tfsProject.PipelineInfos)
                 {
-                    var modelItem = new PipelineInfoModel();
+                    var pipelineInfoModel = new PipelineInfoModel();
 
-                    modelItem.Name = pipelineInfo.Name;
-                    modelItem.QaUrl = pipelineInfo.QaUrl;
-                    modelItem.IntegrationUrl = pipelineInfo.IntegrationUrl;
-                    modelItem.Build = await GetBuildModel(tfsProject.Name, pipelineInfo.BuildDefinitionId);
-                    modelItem.ReleaseIntegration = await GetEnvironmentOneReleaseModel(tfsProject.Name, pipelineInfo.ReleaseDefinitionId);
-                    modelItem.ReleaseQa = await GetEnvironmentTwoReleaseModel(tfsProject.Name,pipelineInfo.ReleaseDefinitionId);
-                    modelItem.IntegrationUp = await PingAsync(pipelineInfo.IntegrationUrl);
-                    modelItem.QaUp = await PingAsync(pipelineInfo.QaUrl);
+                    pipelineInfoModel.Name = pipelineInfo.Name;
+                    pipelineInfoModel.QaUrl = pipelineInfo.QaUrl;
+                    pipelineInfoModel.IntegrationUrl = pipelineInfo.IntegrationUrl;
+                    pipelineInfoModel.Build = await GetBuildModel(tfsProject.Name, pipelineInfo.BuildDefinitionId);
+                    pipelineInfoModel.ReleaseIntegration = await GetEnvironmentOneReleaseModel(tfsProject.Name, pipelineInfo.ReleaseDefinitionId);
+                    pipelineInfoModel.ReleaseQa = await GetEnvironmentTwoReleaseModel(tfsProject.Name,pipelineInfo.ReleaseDefinitionId);
+                    pipelineInfoModel.IntegrationUp = await PingAsync(pipelineInfo.IntegrationUrl);
+                    pipelineInfoModel.QaUp = await PingAsync(pipelineInfo.QaUrl);
 
-                    pipelineInfoModels.Add(modelItem);
+                    pipelineInfoModels.Add(pipelineInfoModel);
                 }
             } 
             catch (Exception ex)
             {
-                _logger.LogError("1", ex);
+                _logger.LogError(ex.Message, ex);
             }
             return pipelineInfoModels;
         }
 
-      private async Task<IList<BuildModel>> GetBuildModel(string projectName, int definitionId)
+        private async Task<IList<BuildModel>> GetBuildModel(string projectName, int definitionId)
         {
             var builds = await _tfsRepository.GetTfsBuildsAsync(projectName, definitionId);
 
-            return builds.Select(x => new BuildModel()
+            var model = builds.Select(x => new BuildModel()
             {
                 Status = x.status,
                 Result = x.result,
                 Finished = x.finishTime,
                 Number = x.buildNumber
-            }).OrderByDescending(x => x.Finished).ToList();
+            });
+
+            return model.OrderByDescending(x => x.Finished).ToList();
         }
 
         private async Task<ReleaseModel> GetEnvironmentOneReleaseModel(string projectName, int definitionId)
@@ -168,13 +170,14 @@ namespace ServiceMonitor.Web.Controllers
             return null;
         }
 
-        // succeeded, notStarted, inProgress
+        // https://docs.microsoft.com/en-us/rest/api/azure/devops/release/releases/update%20release%20environment?view=azure-devops-rest-5.0#environmentstatus
         private async Task<ReleaseModel> GetEnvironmentTwoReleaseModel(string projectName, int definitionId)
         {
             var releases = await _tfsRepository.GetTfsReleaseAsync(projectName, definitionId);
             var release = releases.FirstOrDefault( x=> x.environments.
                                     Where(y => y.name.ToLower() == ENVIRONMENT_TWO_NAME.ToLower() 
-                                        && y.status.ToLower() != "notstarted")
+                                        &&  (y.status.ToLower() == "succeeded"
+                                            || y.status.ToLower() == "rejected"))
                                     .Any());
 
             if (release != null)

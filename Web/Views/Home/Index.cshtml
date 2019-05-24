@@ -6,12 +6,16 @@
 <style>
 
     h4 a { color:white;}
+    h3 { margin-top:25px; margin-bottom:25px; font-size:16px; font-weight:bold; }
+    th { text-align:center; }
+
     .navbar { background-color: #0078d7 }
     .navbar-brand { color: #fff}
-    th { text-align:center; }
     .monitor-cell {  width:15%; text-align:center; }
     .title { width:25%;}
-    h3 { margin:0px; padding:0px; margin-top:30px;}
+    .subtitle {  }
+
+    td.sub-title { margin-top:300px; padding:100px;}
     .loader {
         border: 16px solid #f3f3f3; /* Light grey */
         border-top: 16px solid #a0a0a0; /* Blue */
@@ -146,7 +150,7 @@
 
     function toTitleRow(title) {
         
-        return "<tr><td colspan=\"5\"><h3>"+title+"</h3></td></tr>";
+        return "<tr><td class=\"sub-title\" colspan=\"5\"><h3>"+title+"</h3></td></tr>";
     }
 
     function toDataRow(items) {
@@ -214,7 +218,7 @@
 
         function getReleaseRow(status, name) {
 
-            //console.log(status) ;
+            console.log(status) ;
             if( status === "succeeded") {
                 return validtd(name);
             } else if (status === "rejected") {
